@@ -6,8 +6,10 @@ import QueryTab from '../components/QueryTab';
 import FlashcardTab from '../components/FlashcardTab';
 import './LandingPage.css';
 
+// Type for the tabs
 type TabType = 'summary' | 'explanation' | 'flashcards';
 
+// Interface for the document
 interface Document {
     id: string;
     filename: string;
@@ -80,6 +82,7 @@ export default function LandingPage() {
                             <FileUpload onUploadComplete={handleUploadComplete} />
                         </div>
 
+                        {/* Recent documents section (not used for now) */}
                         {/* {documents.length > 0 && (
                             <div className="recent-docs-section animate-fade-in" style={{ marginTop: '3rem', width: '100%', maxWidth: '800px' }}>
                                 <h3 style={{ marginBottom: '1.5rem', opacity: 0.8, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recent Documents</h3>
@@ -140,6 +143,7 @@ export default function LandingPage() {
                             </button>
                         </div>
 
+                        {/* Tabs for each features */}   
                         <div className="workspace-content card">
                             <div style={{ display: activeTab === 'summary' ? 'block' : 'none' }}>
                                 <SummaryTab documentId={currentDoc.id} />

@@ -12,6 +12,7 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
+    // If user did not fill in the fields when logging in
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!email || !password) {
@@ -24,7 +25,7 @@ export default function LoginPage() {
         try {
             const userData = await login(email, password);
 
-            // Strict Role-to-Tab Validation (Email-based role applied in auth.tsx)
+            // Role-to-Tab Validation (Email-based role applied in auth.tsx)
             if (loginRole === 'admin' && userData?.role !== 'admin') {
                 setError('No such admin exist');
                 await logout();

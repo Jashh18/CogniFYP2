@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recha
 import './AdminDashboard.css';
 import { data } from 'react-router-dom';
 
+// Dummy data for charts
 // 1. SYSTEM RESPONSE TIME VS QUERIES
 const performanceData = [
     { queries: 10, responseTime: 120 },
@@ -62,6 +63,7 @@ export default function AdminDashboard() {
         }
     }
 
+    // Data for the cards on top
     const metricCards = metrics
         ? [
             { label: 'Total Users', value: metrics.total_users, icon: '👥', color: 'var(--primary-500)' },
@@ -130,6 +132,7 @@ export default function AdminDashboard() {
                         marginTop: '2rem'
                     }}
                 >
+                    {/* Charts design but it is not used for now */}
                     {false && (
                         <>
                             {/* 1. SYSTEM RESPONSE TIME VS QUERIES */}

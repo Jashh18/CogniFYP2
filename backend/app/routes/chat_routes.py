@@ -36,7 +36,7 @@ def get_messages(chat_id: str):
     messages = ChatHistoryModel.get_messages_for_student(chat_id, g.user.id)
     if not messages:
         # could be empty chat or not found; distinguish via quick existence check
-        # but keep it simple and secure (no leaking ids)
+        # but keep it simple and secure
         return jsonify({"messages": []}), 200
 
     return jsonify({"messages": messages}), 200

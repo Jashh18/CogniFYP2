@@ -14,6 +14,7 @@ export default function SignupPage() {
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
 
+    // To make sure signing up is proper
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!fullName || !email || !password || !confirmPassword) {
