@@ -1,0 +1,7 @@
+{
+    "pythonVersion": "3.13",
+    "extraPaths": [
+        "c:/Users/tunte/Desktop/CogniFYP2/backend/venv/Lib/site-packages",
+        "."
+    ]
+}

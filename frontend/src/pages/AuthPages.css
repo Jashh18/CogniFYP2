@@ -1,0 +1,198 @@
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 24px;
+}
+
+/* Animated Background Orbs */
+.auth-bg {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.auth-bg-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.4;
+}
+
+.auth-bg-orb-1 {
+    width: 400px;
+    height: 400px;
+    background: var(--primary-400);
+    top: -100px;
+    right: -100px;
+    animation: float 8s ease-in-out infinite;
+}
+
+.auth-bg-orb-2 {
+    width: 300px;
+    height: 300px;
+    background: var(--accent-400);
+    bottom: -80px;
+    left: -80px;
+    animation: float 10s ease-in-out infinite reverse;
+}
+
+.auth-bg-orb-3 {
+    width: 200px;
+    height: 200px;
+    background: var(--primary-300);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: float 6s ease-in-out infinite 2s;
+}
+
+/* Container */
+.auth-container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface-glass);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: var(--radius-xl);
+    padding: 40px 32px;
+    box-shadow: var(--shadow-xl);
+}
+
+.auth-logo {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.auth-logo-icon {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+}
+
+.auth-logo h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary-400), var(--accent-400));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.auth-logo p {
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+    font-weight: 500;
+}
+
+.auth-form h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Auth Tab Toggle - Circular Bullet Design */
+.auth-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin: 0 auto 32px;
+}
+
+.auth-tab {
+    width: 90px;
+    height: 90px;
+    border-radius: 999px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.12), transparent),
+        rgba(0, 0, 0, 0.45);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: transform var(--transition-base), box-shadow var(--transition-base), background var(--transition-base),
+        border-color var(--transition-base), color var(--transition-base);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.auth-tab .tab-icon {
+    font-size: 1.3rem;
+}
+
+.auth-tab .tab-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.auth-tab:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-400);
+    color: var(--text-primary);
+}
+
+.auth-tab.active {
+    background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.2), transparent),
+        linear-gradient(135deg, var(--primary-500), var(--accent-500));
+    border-color: transparent;
+    color: var(--text-inverse);
+    box-shadow: 0 10px 25px rgba(88, 28, 135, 0.55);
+}
+
+.auth-tab.active .tab-icon {
+    transform: scale(1.1);
+}
+
+.auth-form .input-group {
+    margin-bottom: 16px;
+}
+
+.auth-error {
+    padding: 10px 14px;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: var(--radius-md);
+    color: var(--error);
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.auth-success {
+    padding: 10px 14px;
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: var(--radius-md);
+    color: var(--success);
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.auth-submit {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.auth-switch {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+}
+
+.auth-switch a {
+    font-weight: 600;
+}

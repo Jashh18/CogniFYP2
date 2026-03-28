@@ -1,0 +1,84 @@
+.summary-tab {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.summary-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.summary-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.summary-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 16px;
+}
+
+.summary-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary-500);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.summary-loading p {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.summary-loading-sub {
+    font-size: 0.82rem;
+    color: var(--text-tertiary);
+}
+
+.summary-error {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--error);
+}
+
+.summary-error p {
+    margin-bottom: 16px;
+}
+
+.summary-text {
+    line-height: 1.8;
+    color: var(--text-primary);
+}
+
+.summary-text p {
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+}
+
+.summary-text p:empty {
+    display: none;
+}

@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+**/node_modules/
+venv/
+.venv/
+**/venv/
+**/ .venv/
+__pycache__/
+*.pyc
+
+# Environment
+.env
+.env.local
+**/.env
+**/.env.local
+
+# Build
+dist/
+build/
+out/
+*.egg-info/
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads and temporary files
+backend/uploads/
+backend/temp/
+tmp/
+
+# Models cache
+backend/models/

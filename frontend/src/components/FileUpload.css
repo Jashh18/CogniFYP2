@@ -1,0 +1,145 @@
+.file-upload-wrapper {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.file-upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-xl);
+    padding: 48px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    background: var(--surface);
+    position: relative;
+}
+
+.file-upload-zone:hover,
+.file-upload-zone.dragging {
+    border-color: var(--primary-400);
+    background: var(--primary-50);
+    box-shadow: var(--shadow-glow);
+}
+
+[data-theme="dark"] .file-upload-zone:hover,
+[data-theme="dark"] .file-upload-zone.dragging {
+    background: rgba(108, 92, 231, 0.08);
+}
+
+.file-upload-zone.uploading {
+    cursor: default;
+    border-style: solid;
+    border-color: var(--primary-400);
+}
+
+.file-input-hidden {
+    display: none;
+}
+
+.upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.upload-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--primary-100), var(--primary-50));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    color: var(--primary-500);
+    animation: float 3s ease-in-out infinite;
+}
+
+[data-theme="dark"] .upload-icon {
+    background: linear-gradient(135deg, rgba(108, 92, 231, 0.2), rgba(108, 92, 231, 0.1));
+}
+
+.upload-placeholder h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.upload-placeholder p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.upload-hint {
+    font-size: 0.78rem;
+    color: var(--text-tertiary);
+    margin-top: 4px;
+}
+
+/* Progress */
+.upload-progress {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.progress-circle {
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+
+.progress-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.progress-bg {
+    fill: none;
+    stroke: var(--bg-tertiary);
+    stroke-width: 6;
+}
+
+.progress-fill {
+    fill: none;
+    stroke: var(--primary-500);
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.3s ease;
+}
+
+.progress-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary-500);
+}
+
+.upload-status {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Error */
+.upload-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 16px;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: var(--radius-md);
+    color: var(--error);
+    font-size: 0.85rem;
+    font-weight: 500;
+}

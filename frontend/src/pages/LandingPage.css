@@ -1,0 +1,130 @@
+.landing-page {
+    min-height: 100vh;
+    display: flex;
+}
+
+.landing-main {
+    flex: 1;
+    padding: 32px 40px;
+    transition: margin-left var(--transition-base);
+    min-height: 100vh;
+}
+
+/* Welcome State */
+.landing-welcome {
+    max-width: 720px;
+    margin: 0 auto;
+    padding-top: 60px;
+}
+
+.welcome-content {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.welcome-content h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.welcome-sub {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 32px;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Feature Cards */
+.welcome-features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.welcome-feature {
+    text-align: center;
+    padding: 24px 16px;
+    cursor: default;
+}
+
+.welcome-feature:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.feature-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.welcome-feature h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.welcome-feature p {
+    font-size: 0.82rem;
+    color: var(--text-tertiary);
+    line-height: 1.5;
+}
+
+/* Workspace State */
+.landing-workspace {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.workspace-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.workspace-doc-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-secondary);
+}
+
+.workspace-doc-info h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.workspace-content {
+    min-height: 500px;
+    padding: 28px;
+}
+
+/* Tabs */
+.landing-workspace .tabs {
+    margin-bottom: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .landing-main {
+        padding: 20px 16px;
+        margin-left: 0 !important;
+    }
+
+    .welcome-content h1 {
+        font-size: 1.6rem;
+    }
+
+    .welcome-features {
+        grid-template-columns: 1fr;
+    }
+}
