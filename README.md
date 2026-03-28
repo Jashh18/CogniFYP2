@@ -5,8 +5,8 @@ A web-based AI-powered academic assistant designed to support English literature
 
 ## 🚀 Features
 
-- **Summaries**: It distills lengthy texts into concise overviews of themes and arguments, saving hours of manual summarization.
-- **Explanations Generation**:It acts as a dialogue partner. Students can ask questions and receive answers that are strictly evidenced by passages from their uploaded PDF, ensuring academic fidelity.
+- **Summaries**: It condenses long texts into clear, concise summaries helping users save time and quickly understand the main ideas.
+- **Explanations Generation**: It acts as a dialogue partner. Students can ask questions and receive answers that are strictly evidenced by passages from their uploaded PDF, ensuring academic fidelity.
 - **Study Flashcards**: It identifies key concepts and generates Q&A flashcards for effective revision.
 - **Admin Dashboard**: Visualize system usage and manage documents.
 
