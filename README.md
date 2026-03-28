@@ -1,19 +1,15 @@
 # CogniFYP2
 
-A powerful AI-driven document management and analysis system. This project integrates vector search, LLM-based summarization, and a modern dashboard to help users manage and extract insights from their documents.
+A web-based AI-powered academic assistant designed to support English literature undergraduates in processing and understanding complex textual materials. It transforms uploaded PDF documents into structured learning resources by generating summaries, explanations, and flashcards through a Retrieval-Augmented Generation (RAG) framework.
+
 
 ## 🚀 Features
 
-- **AI Summarization**: Automatically generate summaries for uploaded documents using Groq LLM.
-- **Vector Search**: Search through documents using Pinecone vector database for semantic relevance.
+- **Summaries**: It distills lengthy texts into concise overviews of themes and arguments, saving hours of manual summarization.
+- **Explanations Generation**:It acts as a dialogue partner. Students can ask questions and receive answers that are strictly evidenced by passages from their uploaded PDF, ensuring academic fidelity.
+- **Study Flashcards**: It identifies key concepts and generates Q&A flashcards for effective revision.
 - **Admin Dashboard**: Visualize system usage and manage documents.
-- **Secure Authentication**: Integrated with Supabase for user management and secure data storage.
 
-## 📂 Project Structure
-
-- **`frontend/`**: React application built with Vite and TypeScript. Includes a modern UI for document interaction.
-- **`backend/`**: Flask-based REST API providing AI services and database integration.
-- **`database/`**: Contains SQL schemas and database configuration files.
 
 ## 🛠️ Setup Instructions
 
@@ -32,10 +28,3 @@ A powerful AI-driven document management and analysis system. This project integ
 2. Install dependencies: `npm install`
 3. Start the development server: `npm run dev`
 
-## 🔒 Security
-
-Sensitive information like API keys and environment variables are stored in `.env` files and are **not** pushed to the repository. Ensure you have your own credentials set up before running the project.
-
-## 📄 License
-
-[Insert License Info Here]
