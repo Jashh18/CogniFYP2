@@ -33,7 +33,7 @@ def get_summary():
         query_emb = embed_query(
             "Summarize the main themes, arguments, and key points of this text"
         )
-        chunks = query_vectors(query_emb, pdf_id, top_k=5)
+        chunks = query_vectors(query_emb, pdf_id, top_k=8)
 
         if not chunks:
             return jsonify({"error": "No content found for this document"}), 404
@@ -121,7 +121,7 @@ def get_flashcards():
         query_emb = embed_query(
             "Key concepts, definitions, literary terms, themes, characters, and important quotes"
         )
-        chunks = query_vectors(query_emb, pdf_id, top_k=5)
+        chunks = query_vectors(query_emb, pdf_id, top_k=10)
 
         if not chunks:
             return jsonify({"error": "No content found for this document"}), 404

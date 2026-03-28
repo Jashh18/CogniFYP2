@@ -126,19 +126,20 @@ def classify_question(query: str) -> str:
     return result
 
 
-def generate_summary(chunks: list[dict], temperature: float = 0.3) -> str:
+def generate_summary(chunks: list[dict], temperature: float = 0.0) -> str:
     """Generate a concise summary from the top retrieved chunks."""
     context = _truncate_context(chunks)
 
     system_prompt = (
         "You are an academic study assistant for English Literature students. "
-        "Generate a clear, concise summary of the provided text segments. "
+        "Generate a clear, comprehensive summary of the provided text segments. "
         "STRICT CONSTRAINTS: "
         "1. Use ONLY information from the provided excerpts. Do not use external knowledge. "
         "2. You must provide citations for factual claims (e.g. '...as mentioned on page 4'). "
         "3. If information is incomplete or ambiguous in the context, you MUST tag the statement with [requires verification]. "
         "4. Focus on capturing themes, arguments, character insights, or conceptual explanations. "
-        "5. Keep the output very simple, brief, and easy to understand."
+        "5. Ensure the summary is complete and does not cut off. "
+        "6. Provide a well-structured response with key points."
     )
 
     user_prompt = f"Please summarize the following excerpts:\n\n{context}"
@@ -147,15 +148,15 @@ def generate_summary(chunks: list[dict], temperature: float = 0.3) -> str:
         system_prompt, 
         user_prompt, 
         temperature=temperature, 
-        max_tokens=512,
-        top_p=0.9,
-        frequency_penalty=0.2,
-        presence_penalty=0.1
+        max_tokens=1024,
+        top_p=1.0, # set to 1.0 for deterministic output with temp 0.0
+        frequency_penalty=0.0,
+        presence_penalty=0.0
     )
 
 
 def generate_answer(
-    query: str, chunks: list[dict], query_type: str, temperature: float = 0.4
+    query: str, chunks: list[dict], query_type: str, temperature: float = 0.0
 ) -> str:
     """Generate an answer grounded in the retrieved chunks."""
     context = _truncate_context(chunks)
@@ -174,16 +175,17 @@ def generate_answer(
         "You are an academic study assistant for English Literature students. "
         f"This is a {query_type} question. {instruction} "
         "STRICT CONSTRAINTS: "
-        "1. Support each point with explicit text evidence from the provided excerpts. "
-        "2. Reference specific page numbers for every factual claim or quote (e.g., '...as seen on page 12'). "
-        "3. Only use information from the provided context — do NOT hallucinate. "
-        "4. If the context doesn't contain enough information to answer fully, say so honestly. "
-        "5. Keep the output very simple, brief, and easy to understand."
+        "1. Only use information from the provided context. Do NOT use any general knowledge or external information. "
+        "2. If the question is not directly answered in the text, you MUST state: 'I'm sorry, there is no information about this in the document so I cannot help you with it.' "
+        "3. If the user's query looks like a spelling error or a slight variation of something that IS in the document, you should say: 'There is no information about [user's search], but there is this [correct term] that looks similar to what you searched for. However, the exact item you searched for doesn't exist in the document.' "
+        "4. SUPPORT each point with explicit text evidence from the provided excerpts. "
+        "5. Be honest—never hallucinate or assume things based on similar concepts. "
+        "6. Do not 'consider things' that are not explicitly stated."
     )
 
     user_prompt = f"Context:\n{context}\n\nQuestion: {query}"
 
-    return _call_llm(system_prompt, user_prompt, temperature, max_tokens=1500)
+    return _call_llm(system_prompt, user_prompt, temperature, max_tokens=1500, top_p=1.0)
 
 
 def generate_flashcards(chunks: list[dict]) -> list[dict]:
@@ -192,23 +194,23 @@ def generate_flashcards(chunks: list[dict]) -> list[dict]:
 
     system_prompt = (
         "You are an academic study assistant for English Literature students. "
-        "Generate 5 to 10 high-quality study flashcards from the provided text. "
+        "Generate 10 to 20 high-quality study flashcards from the provided text. Try to reach 20 if possible. STRICTLY DO NOT EXCEED 20. "
         "STRICT CONSTRAINTS: "
         "1. Focus on key concepts, literary terms, themes, and important quotes. "
         "2. Maintain a consistent, University-level academic difficulty for every card. "
         "3. Only use information from the provided context — do NOT hallucinate. "
         "4. Output ONLY a valid JSON array of objects. Do NOT use markdown formatting (no ```json). "
         "   Example format: [{\"question\": \"...\", \"answer\": \"...\"}] "
-        "5. Keep the questions and answers very simple, brief, and easy to understand."
+        "5. Keep the questions and answers simple and brief."
     )
 
-    user_prompt = f"Generate flashcards from this text:\n\n{context}"
+    user_prompt = f"Generate 10 to 20 flashcards from this text:\n\n{context}"
 
     response = _call_llm(
         system_prompt, 
         user_prompt, 
-        temperature=0.3, 
-        max_tokens=1500,
+        temperature=0.3, # keep some temperature for variety in card generation
+        max_tokens=2000,
         top_p=0.9,
     )
 
@@ -241,6 +243,9 @@ def generate_flashcards(chunks: list[dict]) -> list[dict]:
                 valid_cards.append(
                     {"question": card["question"], "answer": card["answer"]}
                 )
+
+        # Force a hard cap of 20 - user's request
+        valid_cards = valid_cards[:20]
 
         return valid_cards if valid_cards else _fallback_flashcards()
 

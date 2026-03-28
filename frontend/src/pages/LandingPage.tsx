@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../lib/auth';
-import { documentAPI } from '../lib/api';
 import FileUpload from '../components/FileUpload';
 import SummaryTab from '../components/SummaryTab';
 import QueryTab from '../components/QueryTab';
@@ -20,7 +19,6 @@ export default function LandingPage() {
     const [activeTab, setActiveTab] = useState<TabType>('summary');
     const [currentDoc, setCurrentDoc] = useState<Document | null>(null);
     const [activeSessionId, setActiveSessionId] = useState<string | undefined>();
-    const [documents, setDocuments] = useState<Document[]>([]);
 
     useEffect(() => {
         const storedDoc = localStorage.getItem('current_document');
@@ -31,24 +29,13 @@ export default function LandingPage() {
                 localStorage.removeItem('current_document');
             }
         }
-        loadDocuments();
     }, []);
-
-    async function loadDocuments() {
-        try {
-            const res = await documentAPI.list();
-            setDocuments(res.data.documents);
-        } catch (err) {
-            console.error("Failed to load documents", err);
-        }
-    }
 
     async function handleUploadComplete(doc: Document) {
         setCurrentDoc(doc);
         localStorage.setItem('current_document', JSON.stringify(doc));
         setActiveSessionId(undefined);
         setActiveTab('explanation');
-        loadDocuments();
     }
 
     const greeting = getGreeting();
@@ -57,18 +44,27 @@ export default function LandingPage() {
         <div className="landing-page">
             <header style={{ display: 'flex', justifyContent: 'flex-end', padding: '1.5rem', gap: '1rem', position: 'absolute', top: 0, right: 0, zIndex: 10 }}>
                 {currentDoc && (
-                    <button className="btn btn-secondary btn-sm" onClick={() => { setCurrentDoc(null); localStorage.removeItem('current_document'); }}>
+                    <button className="btn btn-secondary btn-sm" onClick={() => { 
+                        setCurrentDoc(null); 
+                        localStorage.removeItem('current_document');
+                        setActiveSessionId(undefined);
+                        setActiveTab('summary');
+                    }}>
                         Upload New Document
                     </button>
                 )}
-                <button className="btn btn-danger btn-sm" onClick={logout}>
-                    <svg style={{marginRight: '8px'}} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                        <polyline points="16 17 21 12 16 7" />
-                        <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                    Logout
-                </button>
+                    <button className="btn btn-danger btn-sm" onClick={() => {
+                        logout();
+                        setCurrentDoc(null);
+                        localStorage.removeItem('current_document');
+                    }}>
+                        <svg style={{marginRight: '8px'}} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        Logout
+                    </button>
             </header>
 
             <main
@@ -84,7 +80,7 @@ export default function LandingPage() {
                             <FileUpload onUploadComplete={handleUploadComplete} />
                         </div>
 
-                        {documents.length > 0 && (
+                        {/* {documents.length > 0 && (
                             <div className="recent-docs-section animate-fade-in" style={{ marginTop: '3rem', width: '100%', maxWidth: '800px' }}>
                                 <h3 style={{ marginBottom: '1.5rem', opacity: 0.8, fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recent Documents</h3>
                                 <div className="docs-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1rem' }}>
@@ -106,7 +102,7 @@ export default function LandingPage() {
                                     ))}
                                 </div>
                             </div>
-                        )}
+                        )} */}
                     </div>
                 ) : (
                     <div className="landing-workspace animate-fade-in">
@@ -145,16 +141,22 @@ export default function LandingPage() {
                         </div>
 
                         <div className="workspace-content card">
-                            {activeTab === 'summary' && <SummaryTab documentId={currentDoc.id} />}
-                            {activeTab === 'explanation' && (
+                            <div style={{ display: activeTab === 'summary' ? 'block' : 'none' }}>
+                                <SummaryTab documentId={currentDoc.id} />
+                            </div>
+                            
+                            <div style={{ display: activeTab === 'explanation' ? 'block' : 'none' }}>
                                 <QueryTab
                                     {...({
                                         documentId: currentDoc.id,
                                         initialSessionId: activeSessionId,
                                     } as any)}
                                 />
-                            )}
-                            {activeTab === 'flashcards' && <FlashcardTab documentId={currentDoc.id} />}
+                            </div>
+
+                            <div style={{ display: activeTab === 'flashcards' ? 'block' : 'none' }}>
+                                <FlashcardTab documentId={currentDoc.id} />
+                            </div>
                         </div>
                     </div>
                 )}
