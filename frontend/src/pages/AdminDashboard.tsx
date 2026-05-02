@@ -3,7 +3,6 @@ import { adminAPI } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import './AdminDashboard.css';
-import { data } from 'react-router-dom';
 
 // Dummy data for charts
 // 1. SYSTEM RESPONSE TIME VS QUERIES

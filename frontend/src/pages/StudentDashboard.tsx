@@ -4,7 +4,10 @@ import FileUpload from '../components/FileUpload';
 import SummaryTab from '../components/SummaryTab';
 import QueryTab from '../components/QueryTab';
 import FlashcardTab from '../components/FlashcardTab';
-import './LandingPage.css';
+import Sidebar from '../components/Sidebar';
+import ProfilePopup from '../components/ProfilePopup';
+import { chatAPI } from '../lib/api';
+import './StudentDashboard.css';
 
 // Type for the tabs
 type TabType = 'summary' | 'explanation' | 'flashcards';
@@ -16,11 +19,13 @@ interface Document {
     chunk_count: number;
 }
 
-export default function LandingPage() {
-    const { user, logout } = useAuth();
+export default function StudentDashboard() {
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState<TabType>('summary');
     const [currentDoc, setCurrentDoc] = useState<Document | null>(null);
     const [activeSessionId, setActiveSessionId] = useState<string | undefined>();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
 
     useEffect(() => {
         const storedDoc = localStorage.getItem('current_document');
@@ -36,7 +41,14 @@ export default function LandingPage() {
     async function handleUploadComplete(doc: Document) {
         setCurrentDoc(doc);
         localStorage.setItem('current_document', JSON.stringify(doc));
-        setActiveSessionId(undefined);
+        try {
+            // Automatically create a 1-to-1 chat session for this new document
+            const res = await chatAPI.createSession({ document_id: doc.id, title: doc.filename });
+            setActiveSessionId(res.data.session.id);
+        } catch (e) {
+            console.error("Failed to auto-create session:", e);
+            setActiveSessionId(undefined);
+        }
         setActiveTab('explanation');
     }
 
@@ -44,30 +56,52 @@ export default function LandingPage() {
 
     return (
         <div className="landing-page">
-            <header style={{ display: 'flex', justifyContent: 'flex-end', padding: '1.5rem', gap: '1rem', position: 'absolute', top: 0, right: 0, zIndex: 10 }}>
-                {currentDoc && (
-                    <button className="btn btn-secondary btn-sm" onClick={() => { 
-                        setCurrentDoc(null); 
-                        localStorage.removeItem('current_document');
-                        setActiveSessionId(undefined);
-                        setActiveTab('summary');
-                    }}>
-                        Upload New Document
-                    </button>
-                )}
-                    <button className="btn btn-danger btn-sm" onClick={() => {
-                        logout();
-                        setCurrentDoc(null);
-                        localStorage.removeItem('current_document');
-                    }}>
-                        <svg style={{marginRight: '8px'}} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                            <polyline points="16 17 21 12 16 7" />
-                            <line x1="21" y1="12" x2="9" y2="12" />
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem', position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <button className="btn btn-icon" onClick={() => setIsSidebarOpen(true)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <line x1="3" y1="12" x2="21" y2="12" />
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <line x1="3" y1="18" x2="21" y2="18" />
                         </svg>
-                        Logout
                     </button>
+                </div>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    {currentDoc && (
+                        <button className="btn btn-secondary btn-sm" onClick={() => { 
+                            setCurrentDoc(null); 
+                            localStorage.removeItem('current_document');
+                            setActiveSessionId(undefined);
+                            setActiveTab('summary');
+                        }}>
+                            Upload New Document
+                        </button>
+                    )}
+                    <div style={{ position: 'relative' }}>
+                        <button 
+                            className="btn btn-icon" 
+                            style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary-400), var(--primary-600))', color: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer' }}
+                            onClick={() => setIsProfilePopupOpen(!isProfilePopupOpen)}
+                        >
+                            {user?.full_name?.charAt(0).toUpperCase() || 'U'}
+                        </button>
+                        <ProfilePopup isOpen={isProfilePopupOpen} onClose={() => setIsProfilePopupOpen(false)} />
+                    </div>
+                </div>
             </header>
+
+            <Sidebar 
+                isOpen={isSidebarOpen} 
+                onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+                onSelectSession={(doc, sessionId) => {
+                    setCurrentDoc(doc);
+                    localStorage.setItem('current_document', JSON.stringify(doc));
+                    setActiveSessionId(sessionId);
+                    setActiveTab('explanation');
+                    setIsSidebarOpen(false);
+                }}
+                currentSessionId={activeSessionId}
+            />
 
             <main
                 className="landing-main"
@@ -79,6 +113,9 @@ export default function LandingPage() {
                             <h1>
                                 {greeting}, <span className="text-gradient" style={{ color: 'var(--primary-400)' }}>{user?.full_name?.split(' ')[0] || 'Student'}</span>
                             </h1>
+                            <p className="welcome-sub" style={{marginBottom: '2rem', marginTop: '1rem', color: 'var(--text-secondary)', fontSize: '1.1rem'}}>
+                                Welcome to your workspace. Upload a PDF of your reading material below to begin generating summaries, creating flashcards, and asking contextual questions.
+                            </p>
                             <FileUpload onUploadComplete={handleUploadComplete} />
                         </div>
 
@@ -146,7 +183,7 @@ export default function LandingPage() {
                         {/* Tabs for each features */}   
                         <div className="workspace-content card">
                             <div style={{ display: activeTab === 'summary' ? 'block' : 'none' }}>
-                                <SummaryTab documentId={currentDoc.id} />
+                                <SummaryTab documentId={currentDoc.id} sessionId={activeSessionId} />
                             </div>
                             
                             <div style={{ display: activeTab === 'explanation' ? 'block' : 'none' }}>
@@ -159,7 +196,7 @@ export default function LandingPage() {
                             </div>
 
                             <div style={{ display: activeTab === 'flashcards' ? 'block' : 'none' }}>
-                                <FlashcardTab documentId={currentDoc.id} />
+                                <FlashcardTab documentId={currentDoc.id} sessionId={activeSessionId} />
                             </div>
                         </div>
                     </div>
