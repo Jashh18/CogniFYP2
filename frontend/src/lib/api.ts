@@ -79,8 +79,8 @@ export const chatAPI = {
 
 // ===== AI API =====
 export const aiAPI = {
-    getSummary: (documentId: string) =>
-        api.post('/ai/summary', { document_id: documentId }, { timeout: 3 * 60 * 1000 }),
+    getSummary: (documentId: string, sessionId?: string) =>
+        api.post('/ai/summary', { document_id: documentId, session_id: sessionId }, { timeout: 3 * 60 * 1000 }),
 
     askQuestion: (data: {
         document_id: string;
@@ -88,8 +88,8 @@ export const aiAPI = {
         session_id?: string;
     }) => api.post('/ai/query', data, { timeout: 3 * 60 * 1000 }),
 
-    getFlashcards: (documentId: string) =>
-        api.post('/ai/flashcards', { document_id: documentId }, { timeout: 3 * 60 * 1000 }),
+    getFlashcards: (documentId: string, sessionId?: string) =>
+        api.post('/ai/flashcards', { document_id: documentId, session_id: sessionId }, { timeout: 3 * 60 * 1000 }),
 };
 
 // ===== Admin API =====

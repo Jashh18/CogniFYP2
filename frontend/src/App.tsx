@@ -2,7 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/auth';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
-import LandingPage from './pages/LandingPage';
+import HomePage from './pages/HomePage';
+import StudentDashboard from './pages/StudentDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import './App.css';
 
@@ -25,7 +26,7 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isAdmin } = useAuth();
   if (loading) return <LoadingScreen />;
   if (user) {
-    return <Navigate to={isAdmin ? "/admin" : "/"} replace />;
+    return <Navigate to={isAdmin ? "/admin" : "/dashboard"} replace />;
   }
   return <>{children}</>;
 }
@@ -61,8 +62,16 @@ function AppRoutes() {
       <Route
         path="/"
         element={
+          <GuestRoute>
+            <HomePage />
+          </GuestRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
           <ProtectedRoute>
-            <LandingPage />
+            <StudentDashboard />
           </ProtectedRoute>
         }
       />
