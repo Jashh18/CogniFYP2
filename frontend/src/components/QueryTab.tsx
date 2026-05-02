@@ -30,10 +30,15 @@ export default function QueryTab({ documentId, initialSessionId }: QueryTabProps
 
     // When a session is selected from sidebar, load its existing messages
     useEffect(() => {
-        if (!initialSessionId) return;
+        if (!initialSessionId) {
+            setMessages([]);
+            setSessionId(undefined);
+            return;
+        }
 
         async function loadExistingMessages() {
             try {
+                // @ts-ignore
                 const res = await chatAPI.getMessages(initialSessionId);
                 historyLoadRef.current = true;
                 setMessages(res.data.messages || []);

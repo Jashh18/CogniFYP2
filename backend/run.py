@@ -7,10 +7,11 @@ app = create_app()
 
 # Cleanup old sessions on startup
 with app.app_context():
-    from app.models import ChatHistoryModel
+    from app.models import PDFModel
     try:
-        deleted_count = ChatHistoryModel.cleanup_old_chats()
-        print(f"Cleanup: Deleted {deleted_count} old chats.")
+        deleted_count = PDFModel.cleanup_old_pdfs()
+        if deleted_count > 0:
+            print(f"Cleanup: Deleted {deleted_count} old PDFs and their associated chats.")
     except Exception as e:
         print(f"Cleanup failed: {e}")
 

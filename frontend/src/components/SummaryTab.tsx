@@ -4,28 +4,31 @@ import './SummaryTab.css';
 
 interface SummaryTabProps {
     documentId: string;
+    sessionId?: string;
 }
 
-export default function SummaryTab({ documentId }: SummaryTabProps) {
+export default function SummaryTab({ documentId, sessionId }: SummaryTabProps) {
     const [summary, setSummary] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [copied, setCopied] = useState(false);
 
-    const hasLoaded = useRef(false);
+    const hasLoaded = useRef<string | null>(null);
 
     useEffect(() => {
-        if (documentId && !hasLoaded.current) {
-            hasLoaded.current = true;
+        // Only load if we haven't loaded for this specific document AND session combination
+        const cacheKey = `${documentId}-${sessionId || 'new'}`;
+        if (documentId && hasLoaded.current !== cacheKey) {
+            hasLoaded.current = cacheKey;
             generateSummary();
         }
-    }, [documentId]);
+    }, [documentId, sessionId]);
 
     async function generateSummary() {
         setLoading(true);
         setError('');
         try {
-            const res = await aiAPI.getSummary(documentId);
+            const res = await aiAPI.getSummary(documentId, sessionId);
             setSummary(res.data.summary);
         } catch (err: unknown) {
             const serverError = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;

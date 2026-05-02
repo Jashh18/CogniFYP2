@@ -9,29 +9,32 @@ interface Flashcard {
 
 interface FlashcardTabProps {
     documentId: string;
+    sessionId?: string;
 }
 
-export default function FlashcardTab({ documentId }: FlashcardTabProps) {
+export default function FlashcardTab({ documentId, sessionId }: FlashcardTabProps) {
     const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [flipped, setFlipped] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const hasLoaded = useRef(false);
+    const hasLoaded = useRef<string | null>(null);
 
     useEffect(() => {
-        if (documentId && !hasLoaded.current) {
-            hasLoaded.current = true;
+        // Only load if we haven't loaded for this specific document AND session combination
+        const cacheKey = `${documentId}-${sessionId || 'new'}`;
+        if (documentId && hasLoaded.current !== cacheKey) {
+            hasLoaded.current = cacheKey;
             loadFlashcards();
         }
-    }, [documentId]);
+    }, [documentId, sessionId]);
 
     async function loadFlashcards() {
         setLoading(true);
         setError('');
         try {
-            const res = await aiAPI.getFlashcards(documentId);
+            const res = await aiAPI.getFlashcards(documentId, sessionId);
             setFlashcards(res.data.flashcards || []);
         } catch (err: unknown) {
             const serverError = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;

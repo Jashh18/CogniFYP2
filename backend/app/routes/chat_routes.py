@@ -9,7 +9,15 @@ chat_bp = Blueprint("chat", __name__)
 @login_required
 def list_sessions():
     """List all chat history for the current user (Student)."""
-    # IMPORTANT: keep this "light" to avoid sending huge chat_content blobs
+    # Clean up old PDFs (older than 14 days) automatically when accessed
+    # This also cascades and deletes their related chat sessions
+    from app.models import PDFModel
+    try:
+        PDFModel.cleanup_old_pdfs()
+    except Exception as e:
+        # Log error but don't fail the request if cleanup fails
+        print(f"Error cleaning up old PDFs: {e}")
+
     chats = ChatHistoryModel.list_sessions_light(g.user.id)
     return jsonify({"sessions": chats}), 200
 
@@ -46,4 +54,4 @@ def get_messages(chat_id: str):
 @login_required
 def delete_session(chat_id: str):
     """Deletion of chat history is disabled; chats expire automatically."""
-    return jsonify({"error": "Chat deletion is disabled. Chats are auto-removed after 30 days."}), 403
+    return jsonify({"error": "Chat deletion is disabled. Chats are auto-removed after 14 days."}), 403

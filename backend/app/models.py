@@ -60,6 +60,36 @@ class PDFModel:
         }
 
 
+    @staticmethod
+    def cleanup_old_pdfs() -> int:
+        """Delete PDFs older than 14 days and their Pinecone vectors. This cascades to ChatHistory."""
+        from datetime import timedelta
+        from app.services.vector_store import delete_vectors
+        
+        # Changed from 30 to 14 days
+        retention_days = 14
+        cutoff_date = (datetime.now(timezone.utc) - timedelta(days=retention_days)).isoformat()
+        
+        # 1. Fetch old PDFs
+        response = current_app.supabase.table("pdfs").select("pdfid, chunk_count").lt("uploaded_at", cutoff_date).execute()
+        old_pdfs = response.data
+        if not old_pdfs:
+            return 0
+            
+        # 2. Delete vectors from Pinecone
+        for doc in old_pdfs:
+            try:
+                delete_vectors(doc["pdfid"], doc.get("chunk_count", 0))
+            except Exception as e:
+                print(f"Failed to delete vectors for PDF {doc['pdfid']}: {e}")
+                
+        # 3. Delete from Supabase (cascades to chathistory)
+        for doc in old_pdfs:
+            current_app.supabase.table("pdfs").delete().eq("pdfid", doc["pdfid"]).execute()
+            
+        return len(old_pdfs)
+
+
 class ChatHistoryModel:
     """Helper for the 'chathistory' table in Supabase."""
 
@@ -84,6 +114,37 @@ class ChatHistoryModel:
             "chat_content": chat["chat_content"],
             "created_at": chat["created_at"]
         }
+
+    @staticmethod
+    def get_by_id_and_student(chat_id: str, student_id: str) -> dict | None:
+        """Get a specific chat session."""
+        response = current_app.supabase.table("chathistory") \
+            .select("*") \
+            .eq("chatid", chat_id) \
+            .eq("studentid", student_id) \
+            .execute()
+        
+        if not response.data:
+            return None
+        return response.data[0]
+
+    @staticmethod
+    def update_session(chat_id: str, student_id: str, **kwargs) -> bool:
+        """Update session fields (chat_content, summary, flashcards, etc.)."""
+        # Ensure we only update valid fields
+        allowed_fields = ["chat_content", "summary", "flashcards"]
+        data = {k: v for k, v in kwargs.items() if k in allowed_fields}
+        
+        if not data:
+            return False
+
+        response = current_app.supabase.table("chathistory") \
+            .update(data) \
+            .eq("chatid", chat_id) \
+            .eq("studentid", student_id) \
+            .execute()
+        
+        return len(response.data) > 0
 
     @staticmethod
     def get_by_student(student_id: str) -> list:
@@ -123,8 +184,3 @@ class ChatHistoryModel:
             .eq("studentid", student_id) \
             .execute()
         return len(response.data) > 0
-
-    @staticmethod
-    def cleanup_old_chats() -> int:
-        # Implementation depends on how "old" is defined
-        return 0

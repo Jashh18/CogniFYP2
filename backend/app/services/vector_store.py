@@ -113,6 +113,44 @@ def query_vectors(
     return matches
 
 
+def get_evenly_spaced_chunks(doc_id: str, chunk_count: int, num_samples: int = 8) -> list[dict]:
+    """Fetch evenly spaced chunks from the document to capture the full narrative arc."""
+    if chunk_count == 0:
+        return []
+        
+    indices = []
+    if chunk_count <= num_samples:
+        indices = list(range(chunk_count))
+    else:
+        step = (chunk_count - 1) / (num_samples - 1)
+        indices = [int(round(i * step)) for i in range(num_samples)]
+        
+    indices = sorted(list(set(indices)))
+    ids_to_fetch = [f"{doc_id}_{i}" for i in indices]
+    
+    index = _get_index()
+    fetch_response = index.fetch(ids=ids_to_fetch)
+    
+    matches = []
+    vectors_dict = getattr(fetch_response, "vectors", {}) if hasattr(fetch_response, "vectors") else fetch_response.get("vectors", {})
+    
+    # We want them in order of indices
+    for i in indices:
+        vector_id = f"{doc_id}_{i}"
+        if vector_id in vectors_dict:
+            vec = vectors_dict[vector_id]
+            metadata = vec.metadata if hasattr(vec, "metadata") else vec.get("metadata", {})
+            matches.append({
+                "text": metadata.get("text", ""),
+                "score": 1.0,  # mock score
+                "chunk_index": metadata.get("chunk_index", 0),
+                "page_number": metadata.get("page_number", 1),
+                "token_count": metadata.get("token_count", 0),
+            })
+            
+    return matches
+
+
 def delete_vectors(doc_id: str, chunk_count: int) -> None:
     """Delete all vectors for a given document."""
     index = _get_index()
