@@ -104,7 +104,16 @@
 }
 
 .message-content p {
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+.message-content strong {
+    font-weight: 700;
+    color: inherit;
+}
+
+.query-message.assistant .message-content strong {
+    color: var(--primary-600);
 }
 
 .message-content p:last-child {

@@ -184,3 +184,86 @@ class ChatHistoryModel:
             .eq("studentid", student_id) \
             .execute()
         return len(response.data) > 0
+
+
+class SystemMetricsModel:
+    """Helper for logging system performance and domain adherence."""
+
+    @staticmethod
+    def log_query(query: str, avg_score: float, was_answered: bool) -> None:
+        """Log a student query metric."""
+        data = {
+            "query": query[:255],
+            "avg_score": avg_score,
+            "was_answered": was_answered,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        try:
+            current_app.supabase.table("query_metrics").insert(data).execute()
+        except Exception as e:
+            # Fallback to console if table doesn't exist yet
+            print(f"[METRICS] Failed to log query: {e}")
+
+    @staticmethod
+    def log_upload(filename: str, is_literature: bool, reason: str) -> None:
+        """Log a document upload attempt."""
+        data = {
+            "filename": filename[:255],
+            "is_literature": is_literature,
+            "reason": reason,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        try:
+            current_app.supabase.table("upload_logs").insert(data).execute()
+        except Exception as e:
+            print(f"[METRICS] Failed to log upload: {e}")
+
+    @staticmethod
+    def get_summary() -> dict:
+        """Get aggregated metrics for the admin dashboard."""
+        try:
+            # Fetch recent queries for relevance and success rate
+            queries_res = current_app.supabase.table("query_metrics") \
+                .select("avg_score, was_answered") \
+                .order("created_at", desc=True) \
+                .limit(100) \
+                .execute()
+            queries = queries_res.data or []
+            
+            avg_relevance = (sum(q["avg_score"] for q in queries) / len(queries)) if queries else 0
+            success_rate = (sum(1 for q in queries if q["was_answered"]) / len(queries) * 100) if queries else 0
+
+            # Fetch recent uploads for scope adherence
+            uploads_res = current_app.supabase.table("upload_logs") \
+                .select("is_literature, filename, reason") \
+                .order("created_at", desc=True) \
+                .limit(100) \
+                .execute()
+            uploads = uploads_res.data or []
+            
+            acceptance_rate = (sum(1 for u in uploads if u["is_literature"]) / len(uploads) * 100) if uploads else 0
+            
+            # Group by reason for rejections
+            rejection_stats = {}
+            for u in uploads:
+                if not u["is_literature"]:
+                    reason = u["reason"][:50] + "..." if len(u["reason"]) > 50 else u["reason"]
+                    rejection_stats[reason] = rejection_stats.get(reason, 0) + 1
+
+            return {
+                "fetching_accuracy": round(avg_relevance * 100, 1),
+                "answering_reliability": round(success_rate, 1),
+                "scope_adherence": round(acceptance_rate, 1),
+                "rejection_summary": [{"reason": k, "count": v} for k, v in rejection_stats.items()][:5],
+                "total_queries_logged": len(queries),
+                "total_uploads_logged": len(uploads)
+            }
+        except Exception as e:
+            print(f"[METRICS] Failed to fetch summary: {e}")
+            return {
+                "fetching_accuracy": 0,
+                "answering_reliability": 0,
+                "scope_adherence": 0,
+                "rejection_summary": [],
+                "error": str(e)
+            }

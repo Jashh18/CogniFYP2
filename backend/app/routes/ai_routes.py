@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify, g
+from datetime import datetime, timezone
 from app.auth import login_required
 from app.models import PDFModel
 from app.services.embedding_service import embed_query
@@ -76,7 +77,7 @@ def ask_question():
 
     try:
         # Retrieve session to get current history
-        from app.models import ChatHistoryModel
+        from app.models import ChatHistoryModel, SystemMetricsModel
         session = None
         current_history = []
         if session_id:
@@ -89,10 +90,18 @@ def ask_question():
         query_emb = embed_query(query)
         chunks = query_vectors(query_emb, pdf_id, top_k=5, min_score=0.2)
 
+        avg_score = 0
+        was_answered = False
+
         if not chunks:
             answer = "I'm sorry, I couldn't find any information in the document that directly answers your question. Could you try rephrasing or asking something else?"
         else:
             answer = generate_answer(query, chunks, query_type, temperature=0.4)
+            avg_score = sum(c.get("score", 0) for c in chunks) / len(chunks)
+            was_answered = True
+
+        # Log metrics for admin analysis
+        SystemMetricsModel.log_query(query, avg_score, was_answered)
 
         # Update chat history
         new_history = current_history + [
@@ -141,11 +150,9 @@ def get_flashcards():
             return jsonify({"flashcards": session["flashcards"], "count": len(session["flashcards"])}), 200
 
     try:
-        # Retrieve key concept chunks
-        query_emb = embed_query(
-            "Key concepts, definitions, literary terms, themes, characters, and important quotes"
-        )
-        chunks = query_vectors(query_emb, pdf_id, top_k=10, min_score=0.1)
+        # Use narrative-arc sampling (like summary) but with more samples (15) to cover more concepts
+        chunk_count = doc.get("chunk_count", 0)
+        chunks = get_evenly_spaced_chunks(pdf_id, chunk_count, num_samples=15)
 
         if not chunks:
             return jsonify({"error": "No content found for this document"}), 404

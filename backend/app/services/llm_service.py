@@ -1,114 +1,139 @@
+import os
+import json
+import time
+import typing
+import concurrent.futures
+from app.core.config import settings
+
+# Attempt to import Groq (optional fallback)
 try:
     from groq import Groq
 except ImportError:
     Groq = None
-    print("[WARN] groq is not installed. LLM service will be unavailable.")
 
-import os
-import json
-import time
+# Attempt to import Gemini
+try:
+    import google.generativeai as genai
+except ImportError:
+    genai = None
 
+_groq_client = None
+_gemini_model = None
+_gemini_disabled_until = 0.0 # Global circuit breaker for rate limits
 
-_client = None
-
-
-import typing
-
-def _get_client() -> typing.Any:
+def _get_groq_client() -> typing.Any:
     """Get the Groq client (singleton)."""
-    global _client
-    if _client is None:
+    global _groq_client
+    if _groq_client is None:
         if Groq is None:
-            raise ImportError("groq package is required for LLM service but is not installed.")
-        _client = Groq(api_key=os.getenv("GROQ_API_KEY", "")) # type: ignore
-    return _client
+            return None
+        api_key = settings.GROQ_API_KEY
+        if not api_key:
+            return None
+        _groq_client = Groq(api_key=api_key)
+    return _groq_client
 
-# Maximum characters of context to send to Groq in a single prompt.
-# ~14,000 chars ≈ 3,500 tokens, safely under the free-tier TPM limit.
+def _get_gemini_model() -> typing.Any:
+    """Get the Gemini model (singleton)."""
+    global _gemini_model
+    if _gemini_model is None:
+        if genai is None:
+            return None
+        api_key = settings.GOOGLE_API_KEY
+        if not api_key:
+            return None
+        genai.configure(api_key=api_key)
+        _gemini_model = genai.GenerativeModel("gemini-2.0-flash")
+    return _gemini_model
 
-
-MODEL = "llama-3.1-8b-instant"
-
-# Maximum characters of context to send to Groq in a single prompt.
-# ~14,000 chars ≈ 3,500 tokens, safely under the free-tier TPM limit.
-MAX_CONTEXT_CHARS = 14_000
-
+# Constants for context management
+MAX_CONTEXT_CHARS = 30_000 # Gemini handles much more than Groq (up to 1M tokens), so we can be generous
 
 def _truncate_context(chunks: list[dict]) -> str:
-    """
-    Join chunk texts into a single context string, capped at MAX_CONTEXT_CHARS.
-    This prevents hitting Groq's tokens-per-minute rate limit on large documents.
-    Chunks are already ranked by relevance (Pinecone score), so we keep the best
-    ones and truncate the last chunk if needed to fit the budget.
-    """
+    """Join chunk texts into a single context string."""
     parts: list[str] = []
     total: int = 0
     for chunk in chunks:
         text: str = str(chunk.get("text", ""))
         text_len: int = len(text)
-        if total + text_len + 7 > MAX_CONTEXT_CHARS: # type: ignore
-            # Add as much of this chunk as possible
-            remaining: int = MAX_CONTEXT_CHARS - total - 7  # type: ignore
+        if total + text_len + 7 > MAX_CONTEXT_CHARS:
+            remaining: int = MAX_CONTEXT_CHARS - total - 7
             if remaining > 200:
-                parts.append(text[:remaining]) # type: ignore
+                parts.append(text[:remaining])
             break
         parts.append(text)
-        total += text_len + 7  # type: ignore
+        total += text_len + 7
     return "\n\n---\n\n".join(parts)
-
 
 def _call_llm(
     system_prompt: str, 
     user_prompt: str, 
     temperature: float = 0.3,
     max_tokens: int = 1500,
-    top_p: float = 1.0,
-    frequency_penalty: float = 0.0,
-    presence_penalty: float = 0.0
+    **kwargs
 ) -> str:
     """
-    Make a call to the Groq API with Llama-3.1-8B.
-    Retries up to 3 times with exponential backoff on rate-limit (429) errors.
+    Call Gemini (primary) or Groq (fallback).
     """
-    client = _get_client()
-    last_error = None
-
-    for attempt in range(3):
+    # 1. Try Gemini first (if not disabled by circuit breaker)
+    global _gemini_disabled_until
+    gemini = _get_gemini_model()
+    
+    if gemini and time.time() > _gemini_disabled_until:
         try:
-            response = client.chat.completions.create(
-                model=MODEL,
+            # Combine system and user prompt for Gemini
+            full_prompt = f"{system_prompt}\n\nUSER REQUEST: {user_prompt}"
+            
+            # Disable safety filters for academic content to prevent false blocks
+            safety_settings = [
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+            ]
+            
+            # Reduce timeout/wait by setting a shorter request config if possible
+            response = gemini.generate_content(
+                full_prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=temperature,
+                    max_output_tokens=max_tokens,
+                ),
+                safety_settings=safety_settings
+            )
+            
+            try:
+                if response.candidates:
+                    return response.text or ""
+            except (ValueError, IndexError, AttributeError):
+                print(f"[LLM] Gemini blocked content.")
+            
+            return ""
+        except Exception as e:
+            err_msg = str(e).lower()
+            if "429" in err_msg or "quota" in err_msg or "limit" in err_msg:
+                print(f"[LLM] Gemini Quota hit. Disabling for 30s.")
+                _gemini_disabled_until = time.time() + 30.0
+            print(f"[LLM] Gemini error, trying Groq fallback: {e}")
+    
+    # 2. Try Groq fallback
+    groq = _get_groq_client()
+    if groq:
+        try:
+            response = groq.chat.completions.create(
+                model="llama-3.3-70b-versatile",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
                 temperature=temperature,
                 max_tokens=max_tokens,
-                top_p=top_p,
-                frequency_penalty=frequency_penalty,
-                presence_penalty=presence_penalty,
             )
             return response.choices[0].message.content or ""
-
         except Exception as e:
-            error_str = str(e).lower()
-            # Check for rate limit errors (429) — wait and retry
-            if "rate_limit" in error_str or "429" in error_str or "too many" in error_str:
-                wait_seconds = (2 ** attempt) * 5  # 5s, 10s, 20s
-                print(f"[LLM] Groq rate limit hit (attempt {attempt + 1}/3). "
-                      f"Retrying in {wait_seconds}s...")
-                time.sleep(wait_seconds)
-                last_error = e
-            else:
-                # Non-rate-limit error — raise immediately
-                raise e
+            print(f"[LLM] Groq fallback error: {e}")
 
-    # All retries exhausted
-    raise Exception(
-        f"Groq rate limit exceeded after 3 retries. "
-        f"Try again in a minute or upload a smaller document. "
-        f"Original error: {last_error}"
-    )
-
+    raise Exception("Both Gemini and Groq services are unavailable or failed.")
 
 def classify_question(query: str) -> str:
     """Classify a question into one of 5 educational categories."""
@@ -121,10 +146,11 @@ def classify_question(query: str) -> str:
     result = _call_llm(system_prompt, query, temperature=0.1, max_tokens=10).strip().lower()
     
     valid_categories = {"definition", "conceptual", "comparative", "cause-effect", "analytical"}
+    # Clean up any potential markdown or extra whitespace from LLM
+    result = "".join(c for c in result if c.isalnum() or c == "-")
     if result not in valid_categories:
-        result = "analytical"  # fallback for complex unclassified questions
+        result = "analytical"
     return result
-
 
 def generate_summary(chunks: list[dict], temperature: float = 0.0) -> str:
     """Generate a concise summary from the top retrieved chunks."""
@@ -139,21 +165,16 @@ def generate_summary(chunks: list[dict], temperature: float = 0.0) -> str:
         "3. If information is incomplete or ambiguous in the context, you MUST tag the statement with [requires verification]. "
         "4. Focus on capturing themes, arguments, character insights, or conceptual explanations. "
         "5. Ensure the summary is complete and does not cut off. "
-        "6. Provide a well-structured response with key points."
+        "6. Format the summary into exactly three distinct paragraphs: "
+        "   - Paragraph 1: **Document Overview** (A high-level introduction to the text). "
+        "   - Paragraph 2: **Key Themes & Concepts** (An analysis of the main literary ideas). "
+        "   - Paragraph 3: **Critical Insights** (Specific evidence or character/plot details). "
+        "7. DO NOT use bullet points, lists, or the '*' symbol. Use full sentences and coherent paragraphs only."
     )
 
     user_prompt = f"Please summarize the following excerpts:\n\n{context}"
 
-    return _call_llm(
-        system_prompt, 
-        user_prompt, 
-        temperature=temperature, 
-        max_tokens=1024,
-        top_p=1.0, # set to 1.0 for deterministic output with temp 0.0
-        frequency_penalty=0.0,
-        presence_penalty=0.0
-    )
-
+    return _call_llm(system_prompt, user_prompt, temperature=temperature, max_tokens=1024)
 
 def generate_answer(
     query: str, chunks: list[dict], query_type: str, temperature: float = 0.0
@@ -180,78 +201,66 @@ def generate_answer(
         "3. If the user's query looks like a spelling error or a slight variation of something that IS in the document, you should say: 'There is no information about [user's search], but there is this [correct term] that looks similar to what you searched for. However, the exact item you searched for doesn't exist in the document.' "
         "4. SUPPORT each point with explicit text evidence from the provided excerpts. "
         "5. Be honest—never hallucinate or assume things based on similar concepts. "
-        "6. Do not 'consider things' that are not explicitly stated."
+        "6. Do not 'consider things' that are not explicitly stated. "
+        "7. Provide your response in well-organized paragraphs. "
+        "8. DO NOT use bullet points, lists, or the '*' symbol for any part of your response. "
+        "9. Use bold text (e.g., **Term**) to highlight key concepts or evidence instead of listing them."
     )
 
     user_prompt = f"Context:\n{context}\n\nQuestion: {query}"
 
-    return _call_llm(system_prompt, user_prompt, temperature, max_tokens=1500, top_p=1.0)
-
+    return _call_llm(system_prompt, user_prompt, temperature, max_tokens=1500)
 
 def generate_flashcards(chunks: list[dict]) -> list[dict]:
-    """Generate flashcard Q&A pairs from text chunks."""
-    context = _truncate_context(chunks)
-
-    system_prompt = (
-        "You are an academic study assistant for English Literature students. "
-        "Generate 10 to 20 high-quality study flashcards from the provided text. Try to reach 20 if possible. STRICTLY DO NOT EXCEED 20. "
-        "STRICT CONSTRAINTS: "
-        "1. Focus on key concepts, literary terms, themes, and important quotes. "
-        "2. Maintain a consistent, University-level academic difficulty for every card. "
-        "3. Only use information from the provided context — do NOT hallucinate. "
-        "4. Output ONLY a valid JSON array of objects. Do NOT use markdown formatting (no ```json). "
-        "   Example format: [{\"question\": \"...\", \"answer\": \"...\"}] "
-        "5. Keep the questions and answers simple and brief."
-    )
-
-    user_prompt = f"Generate 10 to 20 flashcards from this text:\n\n{context}"
-
-    response = _call_llm(
-        system_prompt, 
-        user_prompt, 
-        temperature=0.3, # keep some temperature for variety in card generation
-        max_tokens=2000,
-        top_p=0.9,
-    )
-
-    # Parse JSON from response
-    try:
-        # Try to extract JSON array from the response
-        response_str: str = str(response)
-        json_match: str = response_str
-        if "```json" in response_str:
-            json_match = response_str.split("```json")[1].split("```")[0]
-        elif "```" in response_str:
-            json_match = response_str.split("```")[1].split("```")[0]
-        elif "[" in response_str:
-            start: int = response_str.index("[")
-            end: int = response_str.rindex("]") + 1
-            json_match = response_str[start:end] # type: ignore
-
-        flashcards = json.loads(json_match)
-
-        # Quality check — filter out low-quality cards
-        valid_cards = []
-        for card in flashcards:
-            if (
-                isinstance(card, dict)
-                and "question" in card
-                and "answer" in card
-                and len(card["question"]) > 10
-                and len(card["answer"]) > 5
-            ):
-                valid_cards.append(
-                    {"question": card["question"], "answer": card["answer"]}
-                )
-
-        # Force a hard cap of 20 - user's request
-        valid_cards = valid_cards[:20]
-
-        return valid_cards if valid_cards else _fallback_flashcards()
-
-    except (json.JSONDecodeError, ValueError):
+    """Generate flashcard Q&A pairs in parallel batches for maximum speed."""
+    if not chunks:
         return _fallback_flashcards()
 
+    # Optimized Batching: Use 3 parallel batches (4 chunks each if 12 samples provided)
+    # This maximizes speed by reducing sequential wait time.
+    n = len(chunks)
+    batch_size = (n + 2) // 3
+    batches = [chunks[i:i + batch_size] for i in range(0, n, batch_size)]
+    
+    all_flashcards = []
+
+    def _process_batch(i, batch):
+        context = _truncate_context(batch)
+        system_prompt = (
+            "You are an academic study assistant. "
+            "Generate 5 to 7 study flashcards from the provided segment. "
+            "Respond ONLY with a JSON array: [{\"question\": \"...\", \"answer\": \"...\"}]"
+        )
+        user_prompt = f"Text:\n\n{context}"
+        
+        try:
+            response = _call_llm(system_prompt, user_prompt, temperature=0.3, max_tokens=1000)
+            if not response: return []
+
+            # Faster JSON extraction
+            response_str = str(response).strip()
+            start = response_str.find("[")
+            end = response_str.rfind("]")
+            if start != -1 and end != -1:
+                json_str = response_str[start:end+1]
+                batch_cards = json.loads(json_str)
+                if isinstance(batch_cards, list):
+                    return [{"question": c["question"], "answer": c["answer"]} 
+                            for c in batch_cards if isinstance(c, dict) and "question" in c]
+        except Exception as e:
+            print(f"[LLM] Batch {i+1} error: {e}")
+        return []
+
+    # Execute in parallel with 3 workers
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        futures = [executor.submit(_process_batch, i, batch) for i, batch in enumerate(batches)]
+        for future in concurrent.futures.as_completed(futures):
+            all_flashcards.extend(future.result())
+
+    if not all_flashcards:
+        return _fallback_flashcards()
+    
+    return all_flashcards[:20]
 
 def _fallback_flashcards() -> list[dict]:
     """Return a fallback message if flashcard generation fails."""

@@ -75,8 +75,20 @@
 }
 
 .summary-text p {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     font-size: 0.95rem;
+}
+
+.summary-text strong {
+    color: var(--primary-600);
+    font-weight: 700;
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 1rem;
+}
+
+.summary-text p:first-child strong {
+    margin-top: 0;
 }
 
 .summary-text p:empty {

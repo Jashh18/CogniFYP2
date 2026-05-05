@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { aiAPI } from '../lib/api';
+import ReactMarkdown from 'react-markdown';
 import './SummaryTab.css';
 
 interface SummaryTabProps {
@@ -105,9 +106,7 @@ export default function SummaryTab({ documentId, sessionId }: SummaryTabProps) {
                     </div>
                 ) : (
                     <div className="summary-text">
-                        {summary.split('\n').map((paragraph, i) => (
-                            <p key={i}>{paragraph}</p>
-                        ))}
+                        <ReactMarkdown>{summary}</ReactMarkdown>
                     </div>
                 )}
             </div>

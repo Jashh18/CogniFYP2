@@ -4,37 +4,17 @@ import { useAuth } from '../lib/auth';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import './AdminDashboard.css';
 
-// Dummy data for charts
-// 1. SYSTEM RESPONSE TIME VS QUERIES
-const performanceData = [
-    { queries: 10, responseTime: 120 },
-    { queries: 20, responseTime: 105 },
-    { queries: 30, responseTime: 140 },
-    { queries: 40, responseTime: 95 },
-    { queries: 50, responseTime: 110 },
-];
-
-// 2. QUERY → RELEVANCE SCORE
-const retrievalData = [
-    { query: 'Definition', relevance: 92 },
-    { query: 'Tone', relevance: 88 },
-    { query: 'Setting', relevance: 95 },
-    { query: 'Moral', relevance: 90 },
-];
-
-// 3. USER ENGAGEMENT (Queries per Session / Feature Usage)
-const interactionData = [
-    { session: '1', queries: 5 },
-    { session: '2', queries: 8 },
-    { session: '3', queries: 4 },
-    { session: '4', queries: 10 },
-];
-
 interface Metrics {
     total_users: number;
     total_students: number;
     total_admins: number;
     total_pdfs_uploaded: number;
+    fetching_accuracy: number;
+    answering_reliability: number;
+    scope_adherence: number;
+    rejection_summary: { reason: string; count: number }[];
+    total_queries_logged: number;
+    total_uploads_logged: number;
 }
 
 export default function AdminDashboard() {
@@ -71,6 +51,17 @@ export default function AdminDashboard() {
             { label: 'PDFs Uploaded', value: metrics.total_pdfs_uploaded, icon: '📄', color: 'var(--info)' },
         ]
         : [];
+
+    // Chart data from real metrics
+    const performanceChartData = metrics ? [
+        { name: 'Fetching Accuracy', value: metrics.fetching_accuracy },
+        { name: 'Answering Reliability', value: metrics.answering_reliability },
+    ] : [];
+
+    const scopeChartData = metrics ? [
+        { name: 'Scope Adherence', value: metrics.scope_adherence },
+        { name: 'Off-Scope Rate', value: 100 - metrics.scope_adherence },
+    ] : [];
 
     return (
         <div className="admin-dashboard">
@@ -126,99 +117,73 @@ export default function AdminDashboard() {
                     className="admin-charts-grid"
                     style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
                         gap: '1.5rem',
                         marginTop: '2rem'
                     }}
                 >
-                    {/* Charts design but it is not used for now */}
-                    {false && (
+                    {metrics && (
                         <>
-                            {/* 1. SYSTEM RESPONSE TIME VS QUERIES */}
+                            {/* 1. AI PERFORMANCE ACCURACY */}
+                            <div className="chart-card card animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                                <div className="chart-header">
+                                    <h3>AI Response Analysis</h3>
+                                    <span className="badge badge-info">{metrics.total_queries_logged} Queries</span>
+                                </div>
+                                <div style={{ height: 250, marginTop: '1rem' }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={performanceChartData} layout="vertical">
+                                            <XAxis type="number" domain={[0, 100]} hide />
+                                            <YAxis dataKey="name" type="category" width={140} stroke="#6b7280" fontSize={12} />
+                                            <Tooltip formatter={(value) => [`${value}%`, 'Score']} cursor={{ fill: 'var(--bg-elevated)', opacity: 0.5 }} />
+                                            <Bar dataKey="value" fill="var(--primary-500)" radius={[0, 4, 4, 0]} barSize={30} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <p className="chart-footer">Shows how accurately the system fetches and answers from document context.</p>
+                            </div>
+
+                            {/* 2. TOPIC SCOPE ADHERENCE */}
                             <div className="chart-card card animate-fade-in" style={{ animationDelay: '0.5s' }}>
-                                <h3>System Response Time</h3>
-                                <div style={{ height: 300, marginTop: '1rem' }}>
+                                <div className="chart-header">
+                                    <h3>Literature Scope Adherence</h3>
+                                    <span className="badge badge-success">{metrics.total_uploads_logged} Uploads</span>
+                                </div>
+                                <div style={{ height: 250, marginTop: '1rem' }}>
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={performanceData}>
-                                            <XAxis
-                                                dataKey="queries"
-                                                stroke="#6b7280"
-                                                fontSize={12}
-                                                tickLine={false}
-                                                axisLine={false}
-                                                height={40}
-                                                label={{ value: 'Number of Queries', position: 'insideBottom', offset: -1 }}
-                                            />
-                                            <YAxis
-                                                stroke="#6b7280"
-                                                fontSize={12}
-                                                tickLine={false}
-                                                axisLine={false}
-                                                label={{ value: 'Response Time (ms)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
-                                            />
-                                            <Tooltip cursor={{ fill: 'var(--bg-elevated)', opacity: 0.5 }} />
-                                            <Bar dataKey="responseTime" fill="var(--primary-500)" radius={[4, 4, 0, 0]} />
+                                        <BarChart data={scopeChartData}>
+                                            <XAxis dataKey="name" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
+                                            <YAxis domain={[0, 100]} stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
+                                            <Tooltip formatter={(value) => [`${value}%`, 'Rate']} cursor={{ fill: 'var(--bg-elevated)', opacity: 0.5 }} />
+                                            <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                                                {scopeChartData.map((entry, index) => (
+                                                    <rect key={index} fill={index === 0 ? 'var(--success)' : 'var(--danger)'} />
+                                                ))}
+                                            </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
+                                <p className="chart-footer">Percentage of documents correctly identified as English Literature.</p>
                             </div>
 
-                            {/* 2. QUERY → RELEVANCE SCORE */}
+                            {/* 3. REJECTION ANALYSIS */}
                             <div className="chart-card card animate-fade-in" style={{ animationDelay: '0.6s' }}>
-                                <h3>Query Relevance Score</h3>
-                                <div style={{ height: 300, marginTop: '1rem' }}>
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={retrievalData}>
-                                            <XAxis
-                                                dataKey="query"
-                                                stroke="#6b7280"
-                                                fontSize={12}
-                                                tickLine={false}
-                                                axisLine={false}
-                                                height={40}
-                                                label={{ value: 'Query', position: 'insideBottom', offset: -1 }}
-                                            />
-                                            <YAxis
-                                                stroke="#6b7280"
-                                                fontSize={12}
-                                                tickLine={false}
-                                                axisLine={false}
-                                                label={{ value: 'Relevance Score (%)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
-                                            />
-                                            <Tooltip cursor={{ fill: 'var(--bg-elevated)', opacity: 0.5 }} />
-                                            <Bar dataKey="relevance" fill="var(--success)" radius={[4, 4, 0, 0]} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
+                                <h3>Common Rejection Reasons</h3>
+                                <div className="rejection-list" style={{ marginTop: '1.5rem' }}>
+                                    {metrics.rejection_summary.length > 0 ? (
+                                        metrics.rejection_summary.map((item, idx) => (
+                                            <div key={idx} className="rejection-item" style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 0', borderBottom: '1px solid var(--bg-elevated)' }}>
+                                                <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{item.reason}</span>
+                                                <span className="badge badge-danger">{item.count}</span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                                            No rejections recorded yet.
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-
-                            {/* 3. USER ENGAGEMENT (Queries per Session) */}
-                            <div className="chart-card card animate-fade-in" style={{ animationDelay: '0.7s' }}>
-                                <h3>User Engagement</h3>
-                                <div style={{ height: 300, marginTop: '1rem' }}>
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={interactionData}>
-                                            <XAxis
-                                                dataKey="session"
-                                                stroke="#6b7280"
-                                                fontSize={12}
-                                                tickLine={false}
-                                                axisLine={false}
-                                                height={40}
-                                                label={{ value: 'Session', position: 'insideBottom', offset: -1 }}
-                                            />
-                                            <YAxis
-                                                stroke="#6b7280"
-                                                fontSize={12}
-                                                tickLine={false}
-                                                axisLine={false}
-                                                label={{ value: 'Queries per Session', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
-                                            />
-                                            <Tooltip cursor={{ fill: 'var(--bg-elevated)', opacity: 0.5 }} />
-                                            <Bar dataKey="queries" fill="var(--accent-500)" radius={[4, 4, 0, 0]} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
+                                <p className="chart-footer" style={{ marginTop: 'auto' }}>Helps understand why certain materials are filtered out.</p>
                             </div>
                         </>
                     )}

@@ -14,7 +14,13 @@ class Config:
     # Groq
     GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
+    # Gemini
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
+
     # Flask
     SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "dev-secret")
     UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER", "uploads")
     DEBUG = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+
+
+settings = Config()

@@ -5,6 +5,7 @@ from app.auth import login_required
 from app.models import PDFModel
 from app.services.pdf_service import extract_text_with_pages, chunk_text_with_pages
 from app.services.embedding_service import embed_chunks
+from app.services.literature_classifier import verify_literature_content
 from app.services.vector_store import upsert_vectors
 
 document_bp = Blueprint("documents", __name__)
@@ -40,6 +41,21 @@ def upload_document():
             os.remove(filepath)
             return jsonify({"error": "Could not extract text from PDF"}), 400
 
+        # Combine page texts for verification
+        combined_text = " ".join(p["text"] for p in pages)
+        # Verify literature content using LLM classifier
+        from app.models import SystemMetricsModel
+        verification = verify_literature_content(combined_text)
+        is_literature = verification.get("is_literature", False)
+        reason = verification.get("reason", "Not literature")
+
+        # Log for admin analysis
+        SystemMetricsModel.log_upload(file.filename, is_literature, reason)
+
+        if not is_literature:
+            os.remove(filepath)
+            return jsonify({"error": f"Document rejected: {reason}"}), 400
+        
         # Chunk with page-awareness (512-token windows, 128-token overlap)
         chunks = chunk_text_with_pages(pages)
 

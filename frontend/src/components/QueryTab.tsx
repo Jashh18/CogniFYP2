@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { aiAPI, chatAPI } from '../lib/api';
+import ReactMarkdown from 'react-markdown';
 import './QueryTab.css';
 
 interface Message {
@@ -130,7 +131,15 @@ export default function QueryTab({ documentId, initialSessionId }: QueryTabProps
                                 {msg.queryType}
                             </span>
                         )}
-                        <div className="message-content message-content-prewrap">{msg.content}</div>
+                        <div className="message-content">
+                            {msg.role === 'assistant' ? (
+                                <ReactMarkdown>{msg.content}</ReactMarkdown>
+                            ) : (
+                                msg.content.split('\n').filter(p => p.trim()).map((paragraph, i) => (
+                                    <p key={i}>{paragraph}</p>
+                                ))
+                            )}
+                        </div>
                     </div>
                 ))}
 
