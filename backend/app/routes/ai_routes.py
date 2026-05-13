@@ -9,6 +9,7 @@ from app.services.llm_service import (
     generate_answer,
     generate_flashcards,
     classify_question,
+    evaluate_response,
 )
 
 ai_bp = Blueprint("ai", __name__)
@@ -91,6 +92,8 @@ def ask_question():
         chunks = query_vectors(query_emb, pdf_id, top_k=5, min_score=0.2)
 
         avg_score = 0
+        faithfulness = 0
+        relevancy = 0
         was_answered = False
 
         if not chunks:
@@ -99,9 +102,14 @@ def ask_question():
             answer = generate_answer(query, chunks, query_type, temperature=0.4)
             avg_score = sum(c.get("score", 0) for c in chunks) / len(chunks)
             was_answered = True
+            
+            # Evaluate the response for faithfulness and relevancy
+            eval_results = evaluate_response(query, answer, chunks)
+            faithfulness = eval_results.get("faithfulness", 0)
+            relevancy = eval_results.get("relevancy", 0)
 
         # Log metrics for admin analysis
-        SystemMetricsModel.log_query(query, avg_score, was_answered)
+        SystemMetricsModel.log_query(query, avg_score, was_answered, faithfulness, relevancy)
 
         # Update chat history
         new_history = current_history + [

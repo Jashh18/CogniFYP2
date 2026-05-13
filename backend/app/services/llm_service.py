@@ -70,11 +70,14 @@ def _call_llm(
     user_prompt: str, 
     temperature: float = 0.3,
     max_tokens: int = 1500,
+    json_mode: bool = False,
     **kwargs
 ) -> str:
     """
-    Call Gemini (primary) or Groq (fallback).
+    Call Gemini (primary) or Groq (fallback) with timeouts and improved reliability.
     """
+    start_time = time.time()
+    
     # 1. Try Gemini first (if not disabled by circuit breaker)
     global _gemini_disabled_until
     gemini = _get_gemini_model()
@@ -92,34 +95,45 @@ def _call_llm(
                 {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
             ]
             
-            # Reduce timeout/wait by setting a shorter request config if possible
+            # Set a 10s timeout for Gemini
             response = gemini.generate_content(
                 full_prompt,
                 generation_config=genai.types.GenerationConfig(
                     temperature=temperature,
                     max_output_tokens=max_tokens,
+                    response_mime_type="application/json" if json_mode else "text/plain"
                 ),
-                safety_settings=safety_settings
+                safety_settings=safety_settings,
+                request_options={"timeout": 10.0}
             )
             
-            try:
-                if response.candidates:
-                    return response.text or ""
-            except (ValueError, IndexError, AttributeError):
-                print(f"[LLM] Gemini blocked content.")
+            if response.candidates:
+                try:
+                    content = response.text or ""
+                    if content.strip():
+                        duration = time.time() - start_time
+                        print(f"[LLM] Gemini success ({duration:.2f}s)")
+                        return content
+                except Exception as text_err:
+                    print(f"[LLM] Gemini text access failed (likely blocked): {text_err}")
             
-            return ""
+            print(f"[LLM] Gemini returned no valid content. Falling back to Groq.")
         except Exception as e:
             err_msg = str(e).lower()
             if "429" in err_msg or "quota" in err_msg or "limit" in err_msg:
-                print(f"[LLM] Gemini Quota hit. Disabling for 30s.")
-                _gemini_disabled_until = time.time() + 30.0
-            print(f"[LLM] Gemini error, trying Groq fallback: {e}")
+                print(f"[LLM] Gemini Quota hit. Disabling for 60s.")
+                _gemini_disabled_until = time.time() + 60.0
+            print(f"[LLM] Gemini failed, trying Groq fallback: {e}")
     
     # 2. Try Groq fallback
     groq = _get_groq_client()
     if groq:
         try:
+            extra_args = {}
+            if json_mode:
+                extra_args["response_format"] = {"type": "json_object"}
+            
+            # Set a 20s timeout for Groq
             response = groq.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[
@@ -128,10 +142,15 @@ def _call_llm(
                 ],
                 temperature=temperature,
                 max_tokens=max_tokens,
+                timeout=20.0,
+                **extra_args
             )
-            return response.choices[0].message.content or ""
+            content = response.choices[0].message.content or ""
+            duration = time.time() - start_time
+            print(f"[LLM] Groq success ({duration:.2f}s)")
+            return content
         except Exception as e:
-            print(f"[LLM] Groq fallback error: {e}")
+            print(f"[LLM] Groq fallback failed: {e}")
 
     raise Exception("Both Gemini and Groq services are unavailable or failed.")
 
@@ -228,17 +247,21 @@ def generate_flashcards(chunks: list[dict]) -> list[dict]:
         context = _truncate_context(batch)
         system_prompt = (
             "You are an academic study assistant. "
-            "Generate 5 to 7 study flashcards from the provided segment. "
-            "Respond ONLY with a JSON array: [{\"question\": \"...\", \"answer\": \"...\"}]"
+            "Generate 5 to 7 study flashcards from the provided text segments. "
+            "STRICT JSON REQUIREMENT: Respond ONLY with a valid JSON array of objects. "
+            "Each object must have 'question' and 'answer' keys. "
+            "Example format: [{\"question\": \"What is...\", \"answer\": \"It is...\"}]"
         )
-        user_prompt = f"Text:\n\n{context}"
+        user_prompt = f"Text Segments:\n\n{context}"
         
         try:
-            response = _call_llm(system_prompt, user_prompt, temperature=0.3, max_tokens=1000)
+            # Enable json_mode for better reliability
+            response = _call_llm(system_prompt, user_prompt, temperature=0.3, max_tokens=1000, json_mode=True)
             if not response: return []
 
-            # Faster JSON extraction
+            # Clean and parse JSON
             response_str = str(response).strip()
+            # If JSON mode is working, it should be a clean array, but we still handle fragments
             start = response_str.find("[")
             end = response_str.rfind("]")
             if start != -1 and end != -1:
@@ -246,7 +269,7 @@ def generate_flashcards(chunks: list[dict]) -> list[dict]:
                 batch_cards = json.loads(json_str)
                 if isinstance(batch_cards, list):
                     return [{"question": c["question"], "answer": c["answer"]} 
-                            for c in batch_cards if isinstance(c, dict) and "question" in c]
+                            for c in batch_cards if isinstance(c, dict) and "question" in c and "answer" in c]
         except Exception as e:
             print(f"[LLM] Batch {i+1} error: {e}")
         return []
@@ -270,3 +293,31 @@ def _fallback_flashcards() -> list[dict]:
             "answer": "Please try uploading a different PDF or a section with more content.",
         }
     ]
+
+def evaluate_response(query: str, answer: str, chunks: list[dict]) -> dict:
+    """Evaluate the faithfulness and relevancy of an answer using LLM-as-a-judge."""
+    context = _truncate_context(chunks)
+    
+    system_prompt = (
+        "You are an expert evaluator for a RAG system. "
+        "Evaluate the following AI response based on the provided context and query. "
+        "1. FAITHFULNESS: How much of the answer is supported by the context? (0.0 to 1.0) "
+        "2. RELEVANCY: How well does the answer address the user query? (0.0 to 1.0) "
+        "Respond ONLY with a JSON object: {\"faithfulness\": float, \"relevancy\": float}"
+    )
+    
+    user_prompt = f"QUERY: {query}\n\nCONTEXT:\n{context}\n\nANSWER:\n{answer}"
+    
+    try:
+        # Use a higher temperature for evaluation to allow for nuance, but keep it low for consistency
+        response = _call_llm(system_prompt, user_prompt, temperature=0.1, max_tokens=100, json_mode=True)
+        scores = json.loads(response)
+        
+        # Ensure values are within [0, 1]
+        return {
+            "faithfulness": max(0.0, min(1.0, float(scores.get("faithfulness", 0.0)))),
+            "relevancy": max(0.0, min(1.0, float(scores.get("relevancy", 0.0))))
+        }
+    except Exception as e:
+        print(f"[EVAL] Evaluation failed: {e}")
+        return {"faithfulness": 0.0, "relevancy": 0.0}

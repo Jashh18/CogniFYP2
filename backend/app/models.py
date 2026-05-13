@@ -190,19 +190,21 @@ class SystemMetricsModel:
     """Helper for logging system performance and domain adherence."""
 
     @staticmethod
-    def log_query(query: str, avg_score: float, was_answered: bool) -> None:
+    def log_query(query: str, avg_score: float, was_answered: bool, faithfulness: float = 0.0, relevancy: float = 0.0) -> None:
         """Log a student query metric."""
         data = {
             "query": query[:255],
             "avg_score": avg_score,
             "was_answered": was_answered,
+            "faithfulness": faithfulness,
+            "relevancy": relevancy,
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         try:
             current_app.supabase.table("query_metrics").insert(data).execute()
         except Exception as e:
             # Fallback to console if table doesn't exist yet
-            print(f"[METRICS] Failed to log query: {e}")
+            print(f"[METRICS] Failed to log query (Make sure to add faithfulness and relevancy columns): {e}")
 
     @staticmethod
     def log_upload(filename: str, is_literature: bool, reason: str) -> None:
@@ -252,6 +254,8 @@ class SystemMetricsModel:
 
             return {
                 "fetching_accuracy": round(avg_relevance * 100, 1),
+                "faithfulness": round((sum(q.get("faithfulness", 0) for q in queries) / len(queries)) * 100, 1) if queries else 0,
+                "relevancy": round((sum(q.get("relevancy", 0) for q in queries) / len(queries)) * 100, 1) if queries else 0,
                 "answering_reliability": round(success_rate, 1),
                 "scope_adherence": round(acceptance_rate, 1),
                 "rejection_summary": [{"reason": k, "count": v} for k, v in rejection_stats.items()][:5],

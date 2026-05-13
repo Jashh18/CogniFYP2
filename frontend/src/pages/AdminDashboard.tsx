@@ -10,6 +10,8 @@ interface Metrics {
     total_admins: number;
     total_pdfs_uploaded: number;
     fetching_accuracy: number;
+    faithfulness: number;
+    relevancy: number;
     answering_reliability: number;
     scope_adherence: number;
     rejection_summary: { reason: string; count: number }[];
@@ -54,8 +56,9 @@ export default function AdminDashboard() {
 
     // Chart data from real metrics
     const performanceChartData = metrics ? [
-        { name: 'Fetching Accuracy', value: metrics.fetching_accuracy },
-        { name: 'Answering Reliability', value: metrics.answering_reliability },
+        { name: 'Faithfulness', value: metrics.faithfulness },
+        { name: 'Answer Relevancy', value: metrics.relevancy },
+        { name: 'Retrieval Accuracy', value: metrics.fetching_accuracy },
     ] : [];
 
     const scopeChartData = metrics ? [
