@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { adminAPI } from '../lib/api';
 import { useAuth } from '../lib/auth';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { 
+    BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
+    Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+    PieChart, Pie, Cell, Legend 
+} from 'recharts';
 import './AdminDashboard.css';
 
 interface Metrics {
@@ -57,14 +61,16 @@ export default function AdminDashboard() {
     // Chart data from real metrics
     const performanceChartData = metrics ? [
         { name: 'Faithfulness', value: metrics.faithfulness },
-        { name: 'Answer Relevancy', value: metrics.relevancy },
-        { name: 'Retrieval Accuracy', value: metrics.fetching_accuracy },
+        { name: 'Relevancy', value: metrics.relevancy },
+        { name: 'Accuracy', value: metrics.fetching_accuracy },
     ] : [];
 
     const scopeChartData = metrics ? [
-        { name: 'Scope Adherence', value: metrics.scope_adherence },
-        { name: 'Off-Scope Rate', value: 100 - metrics.scope_adherence },
+        { name: 'In-Scope', value: metrics.scope_adherence },
+        { name: 'Off-Scope', value: 100 - metrics.scope_adherence },
     ] : [];
+
+    const SCOPE_COLORS = ['var(--success)', 'var(--danger)'];
 
     return (
         <div className="admin-dashboard">
@@ -127,46 +133,60 @@ export default function AdminDashboard() {
                 >
                     {metrics && (
                         <>
-                            {/* 1. AI PERFORMANCE ACCURACY */}
+                            {/* 1. AI PERFORMANCE ANALYSIS (RADAR) */}
                             <div className="chart-card card animate-fade-in" style={{ animationDelay: '0.4s' }}>
                                 <div className="chart-header">
                                     <h3>AI Response Analysis</h3>
                                     <span className="badge badge-info">{metrics.total_queries_logged} Queries</span>
                                 </div>
-                                <div style={{ height: 250, marginTop: '1rem' }}>
+                                <div style={{ height: 300, marginTop: '1rem', display: 'flex', justifyContent: 'center' }}>
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={performanceChartData} layout="vertical">
-                                            <XAxis type="number" domain={[0, 100]} hide />
-                                            <YAxis dataKey="name" type="category" width={140} stroke="#6b7280" fontSize={12} />
-                                            <Tooltip formatter={(value) => [`${value}%`, 'Score']} cursor={{ fill: 'var(--bg-elevated)', opacity: 0.5 }} />
-                                            <Bar dataKey="value" fill="var(--primary-500)" radius={[0, 4, 4, 0]} barSize={30} />
-                                        </BarChart>
+                                        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={performanceChartData}>
+                                            <PolarGrid stroke="var(--bg-elevated)" />
+                                            <PolarAngleAxis dataKey="name" tick={{ fill: '#6b7280', fontSize: 12 }} />
+                                            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                                            <Radar
+                                                name="Score"
+                                                dataKey="value"
+                                                stroke="var(--primary-500)"
+                                                fill="var(--primary-500)"
+                                                fillOpacity={0.5}
+                                            />
+                                            <Tooltip formatter={(value) => [`${value}%`, 'Score']} />
+                                        </RadarChart>
                                     </ResponsiveContainer>
                                 </div>
-                                <p className="chart-footer">Shows how accurately the system fetches and answers from document context.</p>
+                                <p className="chart-footer">Comprehensive breakdown of RAG performance across faithfulness, relevancy, and retrieval accuracy.</p>
                             </div>
 
-                            {/* 2. TOPIC SCOPE ADHERENCE */}
+                            {/* 2. LITERATURE SCOPE ADHERENCE (DONUT) */}
                             <div className="chart-card card animate-fade-in" style={{ animationDelay: '0.5s' }}>
                                 <div className="chart-header">
-                                    <h3>Literature Scope Adherence</h3>
+                                    <h3>Literature Adherence</h3>
                                     <span className="badge badge-success">{metrics.total_uploads_logged} Uploads</span>
                                 </div>
-                                <div style={{ height: 250, marginTop: '1rem' }}>
+                                <div style={{ height: 300, marginTop: '1rem' }}>
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={scopeChartData}>
-                                            <XAxis dataKey="name" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
-                                            <YAxis domain={[0, 100]} stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
-                                            <Tooltip formatter={(value) => [`${value}%`, 'Rate']} cursor={{ fill: 'var(--bg-elevated)', opacity: 0.5 }} />
-                                            <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                                                {scopeChartData.map((entry, index) => (
-                                                    <rect key={index} fill={index === 0 ? 'var(--success)' : 'var(--danger)'} />
+                                        <PieChart>
+                                            <Pie
+                                                data={scopeChartData}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={60}
+                                                outerRadius={80}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                            >
+                                                {scopeChartData.map((_entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={SCOPE_COLORS[index % SCOPE_COLORS.length]} />
                                                 ))}
-                                            </Bar>
-                                        </BarChart>
+                                            </Pie>
+                                            <Tooltip formatter={(value) => [`${value}%`, 'Rate']} />
+                                            <Legend verticalAlign="bottom" height={36}/>
+                                        </PieChart>
                                     </ResponsiveContainer>
                                 </div>
-                                <p className="chart-footer">Percentage of documents correctly identified as English Literature.</p>
+                                <p className="chart-footer">Distribution of uploaded materials correctly identified as English Literature vs off-topic content.</p>
                             </div>
 
                             {/* 3. REJECTION ANALYSIS */}

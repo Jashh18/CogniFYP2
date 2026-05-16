@@ -226,7 +226,7 @@ class SystemMetricsModel:
         try:
             # Fetch recent queries for relevance and success rate
             queries_res = current_app.supabase.table("query_metrics") \
-                .select("avg_score, was_answered") \
+                .select("avg_score, was_answered, faithfulness, relevancy") \
                 .order("created_at", desc=True) \
                 .limit(100) \
                 .execute()
@@ -252,10 +252,15 @@ class SystemMetricsModel:
                     reason = u["reason"][:50] + "..." if len(u["reason"]) > 50 else u["reason"]
                     rejection_stats[reason] = rejection_stats.get(reason, 0) + 1
 
+            # Filter out None values for robustness and calculate averages
+            faith_vals = [q.get("faithfulness") for q in queries if q.get("faithfulness") is not None]
+            rel_vals = [q.get("relevancy") for q in queries if q.get("relevancy") is not None]
+            avg_acc_vals = [q.get("avg_score") for q in queries if q.get("avg_score") is not None]
+
             return {
-                "fetching_accuracy": round(avg_relevance * 100, 1),
-                "faithfulness": round((sum(q.get("faithfulness", 0) for q in queries) / len(queries)) * 100, 1) if queries else 0,
-                "relevancy": round((sum(q.get("relevancy", 0) for q in queries) / len(queries)) * 100, 1) if queries else 0,
+                "fetching_accuracy": round((sum(avg_acc_vals) / len(queries)) * 100, 1) if queries else 0,
+                "faithfulness": round((sum(faith_vals) / len(faith_vals)) * 100, 1) if faith_vals else 0,
+                "relevancy": round((sum(rel_vals) / len(rel_vals)) * 100, 1) if rel_vals else 0,
                 "answering_reliability": round(success_rate, 1),
                 "scope_adherence": round(acceptance_rate, 1),
                 "rejection_summary": [{"reason": k, "count": v} for k, v in rejection_stats.items()][:5],

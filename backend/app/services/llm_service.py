@@ -43,7 +43,7 @@ def _get_gemini_model() -> typing.Any:
         if not api_key:
             return None
         genai.configure(api_key=api_key)
-        _gemini_model = genai.GenerativeModel("gemini-2.0-flash")
+        _gemini_model = genai.GenerativeModel("gemini-2.5-flash")
     return _gemini_model
 
 # Constants for context management

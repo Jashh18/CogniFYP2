@@ -27,6 +27,8 @@ def get_metrics():
             "total_pdfs_uploaded": base_metrics.get("total_pdfs_uploaded", 0),
             # Add new analytics
             "fetching_accuracy": performance_metrics.get("fetching_accuracy", 0),
+            "faithfulness": performance_metrics.get("faithfulness", 0),
+            "relevancy": performance_metrics.get("relevancy", 0),
             "answering_reliability": performance_metrics.get("answering_reliability", 0),
             "scope_adherence": performance_metrics.get("scope_adherence", 0),
             "rejection_summary": performance_metrics.get("rejection_summary", []),
