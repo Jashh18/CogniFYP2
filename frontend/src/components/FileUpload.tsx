@@ -42,7 +42,6 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
             setError('Only PDF files are supported.');
             return;
         }
-
         if (file.size > 50 * 1024 * 1024) {
             setError('File size must be under 50 MB.');
             return;
@@ -53,29 +52,13 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
         setProgress(0);
         setStatus('Uploading PDF...');
 
-        // Simulate progress stages
         const progressInterval = setInterval(() => {
             setProgress((prev) => {
-                if (prev < 30) {
-                    setStatus('Uploading PDF...');
-                    return prev + 2;
-                }
-                if (prev < 55) {
-                    setStatus('Extracting text...');
-                    return prev + 1;
-                }
-                if (prev < 75) {
-                    setStatus('Generating embeddings...');
-                    return prev + 0.5;
-                }
-                if (prev < 90) {
-                    setStatus('Storing in vector database...');
-                    return prev + 0.3;
-                }
-                if (prev < 99) {
-                    setStatus('Finalizing... (keep this tab open)');
-                    return prev + 0.1;
-                }
+                if (prev < 30) { setStatus('Uploading PDF...'); return prev + 2; }
+                if (prev < 55) { setStatus('Extracting text...'); return prev + 1; }
+                if (prev < 75) { setStatus('Generating embeddings...'); return prev + 0.5; }
+                if (prev < 90) { setStatus('Storing in vector database...'); return prev + 0.3; }
+                if (prev < 99) { setStatus('Finalizing... (keep this tab open)'); return prev + 0.1; }
                 return 99;
             });
         }, 200);
@@ -107,9 +90,9 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
     }
 
     return (
-        <div className="file-upload-wrapper">
+        <div className="fu-wrapper">
             <div
-                className={`file-upload-zone ${dragging ? 'dragging' : ''} ${uploading ? 'uploading' : ''}`}
+                className={`fu-zone ${dragging ? 'dragging' : ''} ${uploading ? 'uploading' : ''}`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -121,49 +104,47 @@ export default function FileUpload({ onUploadComplete }: FileUploadProps) {
                     type="file"
                     accept=".pdf"
                     onChange={handleFileSelect}
-                    className="file-input-hidden"
+                    className="fu-input-hidden"
                     id="file-input"
                 />
 
                 {uploading ? (
-                    <div className="upload-progress">
-                        <div className="progress-circle">
-                            <svg viewBox="0 0 100 100" className="progress-svg">
-                                <circle cx="50" cy="50" r="42" className="progress-bg" />
+                    <div className="fu-progress">
+                        <div className="fu-circle">
+                            <svg viewBox="0 0 100 100" className="fu-svg">
+                                <circle cx="50" cy="50" r="42" className="fu-track" />
                                 <circle
-                                    cx="50"
-                                    cy="50"
-                                    r="42"
-                                    className="progress-fill"
+                                    cx="50" cy="50" r="42"
+                                    className="fu-fill"
                                     style={{
                                         strokeDasharray: `${2 * Math.PI * 42}`,
                                         strokeDashoffset: `${2 * Math.PI * 42 * (1 - progress / 100)}`,
                                     }}
                                 />
                             </svg>
-                            <span className="progress-text">{Math.round(progress)}%</span>
+                            <span className="fu-pct">{Math.round(progress)}%</span>
                         </div>
-                        <p className="upload-status">{status}</p>
+                        <p className="fu-status">{status}</p>
                     </div>
                 ) : (
-                    <div className="upload-placeholder">
-                        <div className="upload-icon">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <div className="fu-placeholder">
+                        <div className="fu-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                 <polyline points="17 8 12 3 7 8" />
                                 <line x1="12" y1="3" x2="12" y2="15" />
                             </svg>
                         </div>
                         <h3>Upload your PDF</h3>
-                        {/* <p>Drag & drop or click to browse</p>
-                        <span className="upload-hint">PDF files only, max 50 MB</span> */}
+                        <p>Drag & drop or click to browse</p>
+                        <span className="fu-hint">PDF only · max 50 MB</span>
                     </div>
                 )}
             </div>
 
             {error && (
-                <div className="upload-error animate-fade-in" id="upload-error">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <div className="fu-error animate-fade-in" id="upload-error">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="12" cy="12" r="10" />
                         <line x1="15" y1="9" x2="9" y2="15" />
                         <line x1="9" y1="9" x2="15" y2="15" />

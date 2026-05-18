@@ -12,7 +12,6 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // If user did not fill in the fields when logging in
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!email || !password) {
@@ -25,7 +24,6 @@ export default function LoginPage() {
         try {
             const userData = await login(email, password);
 
-            // Role-to-Tab Validation (Email-based role applied in auth.tsx)
             if (loginRole === 'admin' && userData?.role !== 'admin') {
                 setError('No such admin exist');
                 await logout();
@@ -56,15 +54,11 @@ export default function LoginPage() {
 
     return (
         <div className="auth-page">
-            <div className="auth-bg">
-                <div className="auth-bg-orb auth-bg-orb-1" />
-                <div className="auth-bg-orb auth-bg-orb-2" />
-                <div className="auth-bg-orb auth-bg-orb-3" />
-            </div>
+            <div className="auth-bg" />
 
             <div className="auth-container animate-scale">
                 <div className="auth-logo">
-                    <div className="auth-logo-icon">📚</div>
+                    <span className="auth-logo-icon">📚</span>
                     <h1>Cogni</h1>
                     <p>Your AI Study Companion</p>
                 </div>
@@ -116,7 +110,7 @@ export default function LoginPage() {
                             id="login-password"
                             type="password"
                             className="input-field"
-                            placeholder=""
+                            placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             autoComplete="current-password"
@@ -129,7 +123,7 @@ export default function LoginPage() {
                         disabled={loading}
                         id="login-submit"
                     >
-                        {loading ? 'Signing in...' : 'Sign In'}
+                        {loading ? 'Signing in…' : 'Sign In'}
                     </button>
 
                     {loginRole === 'student' && (

@@ -31,6 +31,7 @@ export default function ProfilePopup({ isOpen, onClose }: ProfilePopupProps) {
     return (
         <div className="profile-popup" ref={popupRef}>
             <div className="profile-header">
+                <div className="profile-glow"></div>
                 <div className="profile-avatar">
                     {user?.full_name?.charAt(0).toUpperCase() || 'U'}
                 </div>
@@ -41,8 +42,8 @@ export default function ProfilePopup({ isOpen, onClose }: ProfilePopupProps) {
                 </div>
             </div>
             <div className="profile-actions">
-                <button 
-                    className="btn btn-danger w-100" 
+                <button
+                    className="btn btn-danger w-100"
                     onClick={() => {
                         onClose();
                         logout();

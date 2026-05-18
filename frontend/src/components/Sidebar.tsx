@@ -66,6 +66,7 @@ export default function Sidebar({ isOpen, onToggle, onSelectSession, currentSess
         <>
             <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
                 <div className="sidebar-header">
+                    <div className="sidebar-dot"></div>
                     <h2>Chat History</h2>
                     <button className="btn-icon" onClick={onToggle}>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

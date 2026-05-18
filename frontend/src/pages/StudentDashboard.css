@@ -1,83 +1,199 @@
+/* =============================================
+   STUDENT DASHBOARD — Soft Blush Aesthetic
+   ============================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
 .landing-page {
     min-height: 100vh;
     display: flex;
+    font-family: 'DM Sans', sans-serif;
+    position: relative;
+    overflow-x: hidden;
 }
 
+/* ── Decorative blobs ── */
+.sd-blob {
+    position: fixed;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.sd-blob-tr {
+    width: 320px;
+    height: 320px;
+    top: -70px;
+    right: -60px;
+    background: radial-gradient(circle at 40% 40%, #e8c8d8 0%, #d4afc3 55%, transparent 80%);
+    border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
+    opacity: 0.55;
+}
+
+.sd-blob-bl {
+    width: 280px;
+    height: 280px;
+    bottom: -70px;
+    left: -55px;
+    background: radial-gradient(circle at 60% 60%, #f0dce6 0%, #deb8cc 55%, transparent 80%);
+    border-radius: 45% 55% 40% 60% / 60% 40% 55% 45%;
+    opacity: 0.5;
+}
+
+.sd-dots {
+    position: fixed;
+    top: 18px;
+    left: 64px;
+    display: flex;
+    gap: 6px;
+    align-items: flex-end;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.sd-dots span {
+    background: #3d1f3d;
+    border-radius: 50%;
+    display: block;
+}
+.sd-dots span:nth-child(1) { width: 6px; height: 6px; opacity: 0.35; }
+.sd-dots span:nth-child(2) { width: 11px; height: 11px; opacity: 0.55; }
+.sd-dots span:nth-child(3) { width: 5px; height: 5px; opacity: 0.28; }
+
+/* ── Header ── */
+.sd-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: rgba(250, 243, 246, 0.75);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(201, 160, 180, 0.18);
+}
+
+.sd-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(201, 160, 180, 0.15);
+    border: 1px solid rgba(201, 160, 180, 0.25);
+    color: #3d1f3d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.18s ease;
+}
+
+.sd-icon-btn:hover {
+    background: rgba(201, 160, 180, 0.28);
+}
+
+.sd-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sd-upload-new-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #7a4060;
+    background: rgba(201, 160, 180, 0.18);
+    border: 1px solid rgba(201, 160, 180, 0.3);
+    border-radius: 20px;
+    padding: 7px 16px;
+    cursor: pointer;
+    letter-spacing: 0.2px;
+    transition: background 0.18s ease;
+}
+
+.sd-upload-new-btn:hover {
+    background: rgba(201, 160, 180, 0.32);
+}
+
+.sd-avatar-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #c9a0b4, #3d1f3d);
+    color: #fff;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem;
+    font-weight: 400;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(61, 31, 61, 0.2);
+    transition: transform 0.18s ease;
+}
+
+.sd-avatar-btn:hover {
+    transform: scale(1.06);
+}
+
+/* ── Main layout ── */
 .landing-main {
     flex: 1;
-    padding: 32px 40px;
-    transition: margin-left var(--transition-base);
+    padding: 72px 40px 40px;
+    position: relative;
+    z-index: 1;
     min-height: 100vh;
 }
 
-/* Welcome State */
+/* ── Welcome State ── */
 .landing-welcome {
-    max-width: 720px;
+    max-width: 680px;
     margin: 0 auto;
-    padding-top: 60px;
+    padding-top: 40px;
 }
 
 .welcome-content {
     text-align: center;
-    margin-bottom: 48px;
+    margin-bottom: 32px;
+}
+
+.welcome-eyebrow {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #c9a0b4;
+    margin-bottom: 6px;
 }
 
 .welcome-content h1 {
-    font-size: 2.2rem;
-    font-weight: 800;
-    line-height: 1.2;
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    line-height: 1.15;
     margin-bottom: 12px;
-    color: var(--text-primary);
+    color: #c9a0b4;
+}
+
+.welcome-name {
+    color: #c9a0b4;
+    font-style: italic;
 }
 
 .welcome-sub {
-    font-size: 1.05rem;
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin-bottom: 32px;
-    max-width: 480px;
+    font-size: 0.92rem;
+    color: #9b7489;
+    line-height: 1.65;
+    margin-bottom: 28px;
+    max-width: 440px;
     margin-left: auto;
     margin-right: auto;
 }
 
-/* Feature Cards */
-.welcome-features {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-}
-
-.welcome-feature {
-    text-align: center;
-    padding: 24px 16px;
-    cursor: default;
-}
-
-.welcome-feature:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-}
-
-.feature-icon {
-    font-size: 2rem;
-    display: block;
-    margin-bottom: 12px;
-}
-
-.welcome-feature h3 {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-}
-
-.welcome-feature p {
-    font-size: 0.82rem;
-    color: var(--text-tertiary);
-    line-height: 1.5;
-}
-
-/* Workspace State */
+/* ── Workspace State ── */
 .landing-workspace {
     max-width: 900px;
     margin: 0 auto;
@@ -87,44 +203,114 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 14px;
 }
 
 .workspace-doc-info {
     display: flex;
     align-items: center;
-    gap: 10px;
-    color: var(--text-secondary);
+    gap: 8px;
+    color: #9b7489;
 }
 
 .workspace-doc-info h2 {
-    font-size: 1.1rem;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.05rem;
+    font-weight: 400;
+    color: #c9a0b4;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 480px;
+}
+
+/* ── Tabs ── */
+.sd-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+    background: rgba(255, 248, 250, 0.7);
+    border: 1px solid rgba(201, 160, 180, 0.2);
+    border-radius: 14px;
+    padding: 5px;
+    backdrop-filter: blur(6px);
+    width: fit-content;
+}
+
+.sd-tab {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: #2d1228;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    padding: 7px 16px;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease;
+    white-space: nowrap;
 }
 
+.sd-tab:hover {
+    background: rgba(201, 160, 180, 0.18);
+    color: #3d1f3d;
+}
+
+.sd-tab.active {
+    background: #3d1f3d;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(61, 31, 61, 0.18);
+}
+
+/* ── Workspace content card ── 
 .workspace-content {
-    min-height: 500px;
-    padding: 28px;
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid rgba(201, 160, 180, 0.22);
+    border-radius: 18px;
+    padding: 24px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 14px rgba(180, 120, 150, 0.07);
+    min-height: 480px;
+}
+    */
+
+/* ── Animations ── */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Tabs */
-.landing-workspace .tabs {
-    margin-bottom: 20px;
+.animate-fade-in {
+    animation: fadeIn 0.38s ease both;
 }
 
-/* Responsive */
+/* ── Responsive ── */
 @media (max-width: 768px) {
     .landing-main {
-        padding: 20px 16px;
-        margin-left: 0 !important;
+        padding: 68px 16px 32px;
+    }
+
+    .landing-welcome {
+        padding-top: 24px;
     }
 
     .welcome-content h1 {
-        font-size: 1.6rem;
+        font-size: 1.55rem;
     }
 
-    .welcome-features {
-        grid-template-columns: 1fr;
+    .sd-tabs {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .sd-tab {
+        flex: 1;
+        text-align: center;
+        padding: 7px 10px;
+    }
+
+    .workspace-doc-info h2 {
+        max-width: 200px;
     }
 }

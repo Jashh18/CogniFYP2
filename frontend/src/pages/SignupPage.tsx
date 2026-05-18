@@ -14,7 +14,6 @@ export default function SignupPage() {
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // To make sure signing up is proper
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         if (!fullName || !email || !password || !confirmPassword) {
@@ -48,15 +47,11 @@ export default function SignupPage() {
 
     return (
         <div className="auth-page">
-            <div className="auth-bg">
-                <div className="auth-bg-orb auth-bg-orb-1" />
-                <div className="auth-bg-orb auth-bg-orb-2" />
-                <div className="auth-bg-orb auth-bg-orb-3" />
-            </div>
+            <div className="auth-bg" />
 
             <div className="auth-container animate-scale">
                 <div className="auth-logo">
-                    <div className="auth-logo-icon">📚</div>
+                    <span className="auth-logo-icon">📚</span>
                     <h1>Cogni</h1>
                     <p>Your AI Study Companion</p>
                 </div>
@@ -121,7 +116,7 @@ export default function SignupPage() {
                             id="signup-confirm"
                             type="password"
                             className="input-field"
-                            placeholder=""
+                            placeholder="Re-enter password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             autoComplete="new-password"
@@ -134,7 +129,7 @@ export default function SignupPage() {
                         disabled={loading}
                         id="signup-submit"
                     >
-                        {loading ? 'Creating account...' : 'Create Account'}
+                        {loading ? 'Creating account…' : 'Create Account'}
                     </button>
 
                     <p className="auth-switch">

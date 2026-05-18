@@ -1,145 +1,169 @@
-.file-upload-wrapper {
+/* =============================================
+   FILE UPLOAD — Soft Blush Aesthetic
+   ============================================= */
+
+.fu-wrapper {
     width: 100%;
-    max-width: 480px;
+    max-width: 420px;
     margin: 0 auto;
 }
 
-.file-upload-zone {
-    border: 2px dashed var(--border);
-    border-radius: var(--radius-xl);
-    padding: 48px 32px;
+/* ── Drop Zone ── */
+.fu-zone {
+    border: 1.5px dashed rgba(201, 160, 180, 0.45);
+    border-radius: 20px;
+    padding: 36px 28px;
     text-align: center;
     cursor: pointer;
-    transition: all var(--transition-base);
-    background: var(--surface);
+    background: rgba(255, 248, 250, 0.8);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 14px rgba(180, 120, 150, 0.07);
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
     position: relative;
 }
 
-.file-upload-zone:hover,
-.file-upload-zone.dragging {
-    border-color: var(--primary-400);
-    background: var(--primary-50);
-    box-shadow: var(--shadow-glow);
+.fu-zone:hover,
+.fu-zone.dragging {
+    border-color: #c9a0b4;
+    border-style: solid;
+    background: rgba(255, 244, 249, 0.92);
+    box-shadow: 0 4px 20px rgba(180, 120, 150, 0.14);
 }
 
-[data-theme="dark"] .file-upload-zone:hover,
-[data-theme="dark"] .file-upload-zone.dragging {
-    background: rgba(108, 92, 231, 0.08);
-}
-
-.file-upload-zone.uploading {
+.fu-zone.uploading {
     cursor: default;
     border-style: solid;
-    border-color: var(--primary-400);
+    border-color: rgba(201, 160, 180, 0.5);
 }
 
-.file-input-hidden {
+.fu-input-hidden {
     display: none;
 }
 
-.upload-placeholder {
+/* ── Placeholder ── */
+.fu-placeholder {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
-.upload-icon {
-    width: 80px;
-    height: 80px;
-    border-radius: var(--radius-full);
-    background: linear-gradient(135deg, var(--primary-100), var(--primary-50));
+.fu-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(201, 160, 180, 0.18);
+    border: 1px solid rgba(201, 160, 180, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 8px;
-    color: var(--primary-500);
-    animation: float 3s ease-in-out infinite;
+    color: #9b7489;
+    margin-bottom: 6px;
+    animation: fu-float 3s ease-in-out infinite;
 }
 
-[data-theme="dark"] .upload-icon {
-    background: linear-gradient(135deg, rgba(108, 92, 231, 0.2), rgba(108, 92, 231, 0.1));
+@keyframes fu-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
 }
 
-.upload-placeholder h3 {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: var(--text-primary);
+.fu-placeholder h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem;
+    font-weight: 400;
+    color: #2d1228;
+    margin: 0;
 }
 
-.upload-placeholder p {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
+.fu-placeholder p {
+    font-size: 0.8rem;
+    color: #2d1228;
+    margin: 0;
 }
 
-.upload-hint {
-    font-size: 0.78rem;
-    color: var(--text-tertiary);
-    margin-top: 4px;
+.fu-hint {
+    font-size: 0.8rem;
+    color: #2d1228;
+    letter-spacing: 0.3px;
+    margin-top: 2px;
 }
 
-/* Progress */
-.upload-progress {
+/* ── Progress ── */
+.fu-progress {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
 }
 
-.progress-circle {
+.fu-circle {
     position: relative;
-    width: 100px;
-    height: 100px;
+    width: 88px;
+    height: 88px;
 }
 
-.progress-svg {
+.fu-svg {
     width: 100%;
     height: 100%;
     transform: rotate(-90deg);
 }
 
-.progress-bg {
+.fu-track {
     fill: none;
-    stroke: var(--bg-tertiary);
+    stroke: rgba(201, 160, 180, 0.2);
     stroke-width: 6;
 }
 
-.progress-fill {
+.fu-fill {
     fill: none;
-    stroke: var(--primary-500);
+    stroke: #3d1f3d;
     stroke-width: 6;
     stroke-linecap: round;
     transition: stroke-dashoffset 0.3s ease;
 }
 
-.progress-text {
+.fu-pct {
     position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--primary-500);
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: #3d1f3d;
 }
 
-.upload-status {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+.fu-status {
+    font-size: 0.78rem;
+    color: #9b7489;
     font-weight: 500;
+    margin: 0;
+    max-width: 240px;
+    line-height: 1.45;
 }
 
-/* Error */
-.upload-error {
+/* ── Error ── */
+.fu-error {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 12px;
-    padding: 10px 16px;
-    background: rgba(239, 68, 68, 0.08);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    border-radius: var(--radius-md);
+    margin-top: 10px;
+    padding: 9px 14px;
+    background: rgba(239, 68, 68, 0.07);
+    border: 1px solid rgba(239, 68, 68, 0.18);
+    border-radius: 12px;
     color: var(--error);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 500;
+}
+
+/* ── Fade in (shared) ── */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.35s ease both;
 }
