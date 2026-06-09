@@ -184,6 +184,7 @@
 
 .query-input:focus {
     outline: none;
+    color: black;
 }
 
 #query-submit {
