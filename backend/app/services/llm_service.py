@@ -47,7 +47,7 @@ def _get_gemini_model() -> typing.Any:
     return _gemini_model
 
 # Constants for context management
-MAX_CONTEXT_CHARS = 30_000 # Gemini handles much more than Groq (up to 1M tokens), so we can be generous
+MAX_CONTEXT_CHARS = 30_000
 
 def _truncate_context(chunks: list[dict]) -> str:
     """Join chunk texts into a single context string."""

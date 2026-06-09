@@ -252,9 +252,9 @@ class SystemMetricsModel:
                     reason = u["reason"][:50] + "..." if len(u["reason"]) > 50 else u["reason"]
                     rejection_stats[reason] = rejection_stats.get(reason, 0) + 1
 
-            # Filter out None values for robustness and calculate averages
-            faith_vals = [q.get("faithfulness") for q in queries if q.get("faithfulness") is not None]
-            rel_vals = [q.get("relevancy") for q in queries if q.get("relevancy") is not None]
+            # Filter out None values and unanswered queries for robustness and calculate averages
+            faith_vals = [q.get("faithfulness") for q in queries if q.get("was_answered") and q.get("faithfulness") is not None]
+            rel_vals = [q.get("relevancy") for q in queries if q.get("was_answered") and q.get("relevancy") is not None]
             avg_acc_vals = [q.get("avg_score") for q in queries if q.get("avg_score") is not None]
 
             return {

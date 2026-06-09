@@ -46,7 +46,7 @@ export default function SummaryTab({ documentId, sessionId }: SummaryTabProps) {
     }
 
     function handleRetry() {
-        hasLoaded.current = false;
+        hasLoaded.current = null;
         generateSummary();
     }
 

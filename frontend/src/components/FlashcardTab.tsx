@@ -51,7 +51,7 @@ export default function FlashcardTab({ documentId, sessionId }: FlashcardTabProp
     }
 
     function handleRetry() {
-        hasLoaded.current = false;
+        hasLoaded.current = null;
         setFlashcards([]);
         setCurrentIndex(0);
         loadFlashcards();

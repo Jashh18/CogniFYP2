@@ -59,7 +59,7 @@ def upsert_vectors(
         metadata = {
             "doc_id": str(doc_id),
             "chunk_index": i,
-            "text": str(text)[:3800], # type: ignore
+            "text": str(text)[:3800],
             "page_number": page_number,
             "token_count": token_count,
         }

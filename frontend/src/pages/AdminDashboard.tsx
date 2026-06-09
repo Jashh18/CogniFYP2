@@ -29,11 +29,15 @@ export default function AdminDashboard() {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        loadMetrics();
+        loadMetrics(true);
+        const intervalId = setInterval(() => {
+            loadMetrics(false);
+        }, 3000);
+        return () => clearInterval(intervalId);
     }, []);
 
-    async function loadMetrics() {
-        setLoading(true);
+    async function loadMetrics(isInitial = false) {
+        if (isInitial) setLoading(true);
         try {
             const res = await adminAPI.getMetrics();
             setMetrics(res.data.metrics);
@@ -43,7 +47,7 @@ export default function AdminDashboard() {
                 'Failed to load metrics.'
             );
         } finally {
-            setLoading(false);
+            if (isInitial) setLoading(false);
         }
     }
 
@@ -100,7 +104,7 @@ export default function AdminDashboard() {
                 ) : error ? (
                     <div className="admin-error card">
                         <p>{error}</p>
-                        <button className="btn btn-primary btn-sm" onClick={loadMetrics}>Retry</button>
+                        <button className="btn btn-primary btn-sm" onClick={() => loadMetrics(true)}>Retry</button>
                     </div>
                 ) : (
                     <div className="admin-metrics-grid animate-fade-in">

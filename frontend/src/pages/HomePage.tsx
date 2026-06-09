@@ -68,17 +68,17 @@ export default function HomePage() {
 
             <main className="home-hero">
                 <div className="hero-content">
-                    <div className="hero-badge animate-fade-in">Designed for Literature Undergraduates</div>
+                    <div className="hero-badge animate-fade-in">Designed for EnglishLiterature Undergraduates</div>
                     <h1 className="hero-title animate-fade-in" style={{ animationDelay: '0.1s' }}>
                         Your AI Companion for <br />
-                        <span className="text-gradient">Literary Analysis</span>
+                        <span className="text-gradient">English Literature Comprehension and Revision</span>
                     </h1>
                     <p className="hero-subtitle animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                        Cogni transforms complex texts into clear summaries, interactive flashcards,
+                        Cogni transforms english literature texts into clear summaries, interactive flashcards,
                         and contextual explanations, helping you master your reading assignments with ease.
                     </p>
                     <div className="hero-actions animate-fade-in" style={{ animationDelay: '0.3s' }}>
-                        <Link to="/signup" className="btn btn-primary btn-lg">Start Analyzing</Link>
+                        <Link to="/signup" className="btn btn-primary btn-lg">Start Revision</Link>
                         <a href="#how-it-works" className="btn btn-secondary btn-lg">How It Works</a>
                     </div>
                 </div>
@@ -87,23 +87,23 @@ export default function HomePage() {
             <section className="home-features">
                 <div className="features-header">
                     <h2 className="features-title">Master Your Syllabus</h2>
-                    <p className="features-subtitle">Everything you need to deeply understand your texts.</p>
+                    <p className="features-subtitle">Everything you need to understand your texts.</p>
                 </div>
                 <div className="features-grid">
                     <div className="feature-card">
                         <div className="feature-icon-wrapper">📝</div>
-                        <h3>Intelligent Summaries</h3>
-                        <p>Upload any PDF and instantly generate concise, structured summaries. Grasp core themes and narrative arcs without getting lost in the details.</p>
+                        <h3>Summaries</h3>
+                        <p>Upload english literature PDFs and instantly generate structured summaries.</p>
                     </div>
                     <div className="feature-card">
                         <div className="feature-icon-wrapper">💬</div>
-                        <h3>Contextual Explanations</h3>
-                        <p>Encounter a difficult passage? Ask Cogni directly. Our AI understands the context of your document and explains archaic language or complex metaphors.</p>
+                        <h3>Explanations</h3>
+                        <p>Encounter a difficult passage? Ask Cogni directly. Our AI understands the context of your document and explains.</p>
                     </div>
                     <div className="feature-card">
                         <div className="feature-icon-wrapper">🃏</div>
-                        <h3>Interactive Flashcards</h3>
-                        <p>Automatically generate study flashcards from your readings. Perfect for memorizing key quotes, character motives, and literary devices before exams.</p>
+                        <h3>Flashcards</h3>
+                        <p>Automatically generate study flashcards from the uploaded PDFs. Perfect for memorizing before exams.</p>
                     </div>
                 </div>
             </section>
@@ -114,11 +114,11 @@ export default function HomePage() {
                     <div className="step">
                         <div className="step-number">1</div>
                         <h3>Upload Text</h3>
-                        <p>Provide your reading material in PDF format. Cogni securely processes and indexes the entire document.</p>
+                        <p>Provide your english literaturereading material in PDF format. Cogni securely processes and indexes the entire document.</p>
                     </div>
                     <div className="step">
                         <div className="step-number">2</div>
-                        <h3>Analyze</h3>
+                        <h3>Comprehension and Revision</h3>
                         <p>Choose between generating a summary, asking direct questions, or creating flashcards tailored to the text.</p>
                     </div>
                     <div className="step">
@@ -129,9 +129,9 @@ export default function HomePage() {
                 </div>
             </section>
 
-            <footer className="home-footer">
+            {/* <footer className="home-footer">
                 <p>&copy; {new Date().getFullYear()} Cogni AI Study Assistant. All rights reserved.</p>
-            </footer>
+            </footer> */}
         </div>
     );
 }

@@ -121,7 +121,7 @@
 }
 
 .message-content strong {
-    color: #2d1228;
+    color: #e6e6e6;
     font-weight: 700;
 }
 
@@ -173,7 +173,7 @@
     flex: 1;
     background: transparent;
     border: none;
-    color: #b59bb5;
+    color: #ffffff;
     font-size: 0.94rem;
     padding: 8px 10px;
 }
@@ -194,11 +194,11 @@
     padding: 12px 14px;
     transition: 0.2s ease;
 }
-
+/* 
 #query-submit:hover {
     background: #ffd7f3;
     transform: translateY(-1px);
-}
+} */
 
 #query-submit:disabled {
     opacity: 0.6;
